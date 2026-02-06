@@ -9,6 +9,7 @@ interface StoriesState {
   error: string | null;
   imageGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   audioGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
+  transcriptGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
 }
 
 export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
@@ -18,6 +19,23 @@ export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data as Story[];
+});
+
+export const createStoryRemote = createAsyncThunk('stories/create', async (userId: string) => {
+  const { data, error } = await supabase
+    .from('stories')
+    .insert({
+      user_id: userId,
+      title: 'Untitled Story',
+      summary: 'A new story waiting to be told...',
+      tags: ['draft'],
+      status: 'Draft',
+      thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
+      transcript: ''
+    })
+    .select();
+  if (error) throw error;
+  return data[0] as Story;
 });
 
 export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story) => {
@@ -44,6 +62,7 @@ const initialState: StoriesState = {
   error: null,
   imageGenerationStatuses: {},
   audioGenerationStatuses: {},
+  transcriptGenerationStatuses: {},
 };
 
 const storiesSlice = createSlice({
@@ -56,6 +75,9 @@ const storiesSlice = createSlice({
     setAudioGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
       state.audioGenerationStatuses[action.payload.id] = action.payload.status;
     },
+    setTranscriptGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
+      state.transcriptGenerationStatuses[action.payload.id] = action.payload.status;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -66,6 +88,9 @@ const storiesSlice = createSlice({
         state.items = action.payload;
         state.loading = false;
       })
+      .addCase(createStoryRemote.fulfilled, (state, action) => {
+        state.items.unshift(action.payload);
+      })
       .addCase(updateStoryRemote.fulfilled, (state, action) => {
         const index = state.items.findIndex(s => s.id === action.payload.id);
         if (index !== -1) {
@@ -75,5 +100,5 @@ const storiesSlice = createSlice({
   }
 });
 
-export const { setImageGenStatus, setAudioGenStatus } = storiesSlice.actions;
+export const { setImageGenStatus, setAudioGenStatus, setTranscriptGenStatus } = storiesSlice.actions;
 export default storiesSlice.reducer;

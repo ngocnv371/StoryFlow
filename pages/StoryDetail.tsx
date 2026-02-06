@@ -4,11 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
-import { generateStoryTranscript } from '../services/geminiService';
 import { Story } from '../types';
 import CoverGenerator from '../components/CoverGenerator';
 import AudioGenerator from '../components/AudioGenerator';
+import TranscriptGenerator from '../components/TranscriptGenerator';
 import ImageInspector from '../components/ImageInspector';
 import TagEditor from '../components/TagEditor';
 
@@ -17,10 +16,8 @@ const StoryDetail: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const story = useSelector((state: RootState) => state.stories.items.find(s => s.id === id));
-  const textGenConfig = useSelector((state: RootState) => state.config.textGen);
 
   const [formData, setFormData] = useState<Story | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
@@ -35,30 +32,6 @@ const StoryDetail: React.FC = () => {
     await dispatch(updateStoryRemote(formData));
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus('idle'), 2000);
-  };
-
-  const handleGenerateTranscript = async () => {
-    if (!formData.title || !formData.summary) {
-      dispatch(showAlert({
-        title: 'Information Required',
-        message: 'Please provide at least a title and a summary before generating a transcript.',
-        type: 'warning'
-      }));
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const transcript = await generateStoryTranscript(textGenConfig, formData);
-      setFormData(prev => prev ? ({ ...prev, transcript }) : null);
-    } catch (error: any) {
-      dispatch(showAlert({
-        title: 'Transcript Error',
-        message: error.message || 'Failed to generate transcript.',
-        type: 'error'
-      }));
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   return (
@@ -78,7 +51,7 @@ const StoryDetail: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
             <div onClick={() => setIsInspectorOpen(true)} className="aspect-video rounded-xl overflow-hidden cursor-pointer group relative">
-              <img src={formData.thumbnail_url || 'https://via.placeholder.com/400x225?text=No+Cover'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={formData.thumbnail_url || 'https://via.placeholder.com/400x225?text=No+Cover'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Story Cover" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                 <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -131,25 +104,15 @@ const StoryDetail: React.FC = () => {
                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
                 <h3 className="font-bold text-slate-800">Transcript Editor</h3>
               </div>
-              <button 
-                onClick={handleGenerateTranscript} 
-                disabled={isGenerating} 
-                className="group relative flex items-center gap-2 bg-white border border-indigo-200 text-indigo-600 px-4 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-sm"
-              >
-                {isGenerating ? (
-                  <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                )}
-                {isGenerating ? 'Casting Spell...' : 'Magic Transcript'}
-              </button>
+              <TranscriptGenerator 
+                story={formData} 
+                onGenerated={(transcript) => setFormData(prev => prev ? ({ ...prev, transcript }) : null)} 
+              />
             </div>
             <textarea 
               value={formData.transcript} 
               onChange={e => setFormData({...formData, transcript: e.target.value})} 
-              className="flex-1 p-8 text-lg font-serif leading-relaxed resize-none outline-none text-slate-700 placeholder:text-slate-300" 
+              className="flex-1 p-8 text-lg text-slate-700 leading-relaxed outline-none resize-none bg-white font-serif"
               placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..." 
             />
           </div>

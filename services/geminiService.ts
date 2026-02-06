@@ -65,7 +65,10 @@ const uploadToSupabase = async (bucket: string, fileName: string, data: Blob | U
     .from(bucket)
     .upload(`${Date.now()}_${fileName}`, fileBody, { contentType: mimeType, upsert: true });
 
-  if (error) throw error;
+  if (error) {
+    console.error(`Supabase upload error [${bucket}]:`, error);
+    throw error;
+  }
 
   const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
   return publicUrl;
@@ -90,15 +93,21 @@ export const generateStoryTranscript = async (
 ): Promise<string> => {
   const apiKey = config.apiKey || process.env.API_KEY || '';
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `Generate a detailed cinematic story transcript for: ${storyDetails.title}. Summary: ${storyDetails.summary}. Tags: ${storyDetails.tags.join(', ')}`;
+  const prompt = `Generate a cinematic story transcript meant for narration using TTS service. Title: ${storyDetails.title}. Summary: ${storyDetails.summary}. Tags: ${storyDetails.tags.join(', ')}`;
 
   try {
     const response = await ai.models.generateContent({
       model: config.model || 'gemini-3-flash-preview',
       contents: prompt,
     });
+    
+    if (!response.text) {
+      console.warn("Gemini returned an empty response for transcript:", response);
+    }
+    
     return response.text || "Failed to generate transcript.";
   } catch (error: any) {
+    console.error("Transcript generation error details:", error);
     throw new Error(error.message || "Transcript generation failed.");
   }
 };
@@ -125,14 +134,21 @@ export const generateCoverImage = async (apiKey: string, story: Story): Promise<
     });
 
     let base64 = "";
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) base64 = part.inlineData.data;
+    const candidate = response.candidates?.[0];
+    if (candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
+        if (part.inlineData) base64 = part.inlineData.data;
+      }
     }
 
-    if (!base64) throw new Error("No image data returned.");
+    if (!base64) {
+      console.error("Image generation failed. Full response:", response);
+      throw new Error("No image data returned from model. It might be blocked by safety filters.");
+    }
 
     return await uploadBase64ToSupabase('thumbnails', `${story.id}.png`, base64, 'image/png');
   } catch (error: any) {
+    console.error("Cover image generation error details:", error);
     throw new Error(error.message || "Image generation failed.");
   }
 };
@@ -154,7 +170,10 @@ export const generateAudioSpeech = async (apiKey: string, story: Story): Promise
     });
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data returned.");
+    if (!base64Audio) {
+      console.error("Audio generation failed. Full response:", response);
+      throw new Error("No audio data returned. The model might have failed to process the text.");
+    }
 
     // Decode base64 to raw bytes
     const binaryString = atob(base64Audio);
@@ -169,6 +188,7 @@ export const generateAudioSpeech = async (apiKey: string, story: Story): Promise
     // Upload the valid WAV file to Supabase
     return await uploadToSupabase('audio', `${story.id}.wav`, wavData, 'audio/wav');
   } catch (error: any) {
+    console.error("Audio generation error details:", error);
     throw new Error(error.message || "Audio generation failed.");
   }
 };
