@@ -1,0 +1,8 @@
+{
+  "name": "StoryFlow",
+  "description": "A comprehensive story management platform with integrated AI generation capabilities for transcripts and content optimization.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
