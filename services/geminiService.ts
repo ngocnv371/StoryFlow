@@ -103,10 +103,19 @@ export const generateStoryTranscript = async (
   }
 };
 
+export const constructImagePrompt = (story: Story): string => {
+  const prompt = `Artistic, cinematic cover art for a story. 
+Title: ${story.title}. 
+Summary: ${story.summary}. 
+Atmosphere: ${story.tags.join(', ')}. 
+Style: High-quality digital concept art, epic lighting, professional composition.`;
+  return prompt;
+}
+
 export const generateCoverImage = async (apiKey: string, story: Story): Promise<string> => {
   const finalApiKey = apiKey || process.env.API_KEY || '';
   const ai = new GoogleGenAI({ apiKey: finalApiKey });
-  const prompt = `Cinematic digital art cover for: ${story.title}. Themes: ${story.tags.join(', ')}.`;
+  const prompt = constructImagePrompt(story);
 
   try {
     const response = await ai.models.generateContent({

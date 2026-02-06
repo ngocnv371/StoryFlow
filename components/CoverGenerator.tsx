@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setImageGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
-import { generateCoverImage } from '../services/geminiService';
+import { generateCoverImage, constructImagePrompt } from '../services/geminiService';
 import { Story } from '../types';
 
 interface CoverGeneratorProps {
@@ -17,12 +17,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
   const status = useSelector((state: RootState) => state.stories.imageGenerationStatuses[story.id] || 'idle');
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const prompt = `Artistic, cinematic cover art for a story. 
-Title: ${story.title}. 
-Summary: ${story.summary}. 
-Atmosphere: ${story.tags.join(', ')}. 
-Context: ${story.transcript.substring(0, 300)}...
-Style: High-quality digital concept art, epic lighting, professional composition.`;
+  const prompt = constructImagePrompt(story);
 
   const handleGenerate = async () => {
     dispatch(setImageGenStatus({ id: story.id, status: 'generating' }));
