@@ -4,26 +4,84 @@ import { TextGenConfig, Story } from "../types";
 import { supabase } from "../supabaseClient";
 
 /**
- * Uploads a base64 string to Supabase Storage
+ * Wraps raw PCM data in a WAV header so browsers can play it.
+ * Gemini TTS outputs 24kHz, 16-bit, Mono PCM.
  */
-const uploadToSupabase = async (bucket: string, fileName: string, base64Data: string, mimeType: string) => {
-  // Convert base64 to Blob
+const createWavHeader = (pcmData: Uint8Array, sampleRate: number = 24000): Uint8Array => {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = pcmData.length;
+  const chunkSize = 36 + dataSize;
+
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+
+  // RIFF identifier
+  view.setUint8(0, 'R'.charCodeAt(0));
+  view.setUint8(1, 'I'.charCodeAt(0));
+  view.setUint8(2, 'F'.charCodeAt(0));
+  view.setUint8(3, 'F'.charCodeAt(0));
+  // File size
+  view.setUint32(4, chunkSize, true);
+  // WAVE identifier
+  view.setUint8(8, 'W'.charCodeAt(0));
+  view.setUint8(9, 'A'.charCodeAt(0));
+  view.setUint8(10, 'V'.charCodeAt(0));
+  view.setUint8(11, 'E'.charCodeAt(0));
+  // fmt subchunk
+  view.setUint8(12, 'f'.charCodeAt(0));
+  view.setUint8(13, 'm'.charCodeAt(0));
+  view.setUint8(14, 't'.charCodeAt(0));
+  view.setUint8(15, ' '.charCodeAt(0));
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true);  // AudioFormat (1 for PCM)
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  // data subchunk
+  view.setUint8(36, 'd'.charCodeAt(0));
+  view.setUint8(37, 'a'.charCodeAt(0));
+  view.setUint8(38, 't'.charCodeAt(0));
+  view.setUint8(39, 'a'.charCodeAt(0));
+  view.setUint32(40, dataSize, true);
+
+  const combined = new Uint8Array(44 + pcmData.length);
+  combined.set(new Uint8Array(header), 0);
+  combined.set(pcmData, 44);
+  return combined;
+};
+
+/**
+ * Uploads audio data to Supabase Storage
+ */
+const uploadToSupabase = async (bucket: string, fileName: string, data: Blob | Uint8Array, mimeType: string) => {
+  const fileBody = data instanceof Uint8Array ? new Blob([data], { type: mimeType }) : data;
+  
+  const { data: uploadData, error } = await supabase.storage
+    .from(bucket)
+    .upload(`${Date.now()}_${fileName}`, fileBody, { contentType: mimeType, upsert: true });
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(uploadData.path);
+  return publicUrl;
+};
+
+/**
+ * Uploads a base64 string to Supabase Storage (for images)
+ */
+const uploadBase64ToSupabase = async (bucket: string, fileName: string, base64Data: string, mimeType: string) => {
   const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
   const byteNumbers = new Array(byteCharacters.length);
   for (let i = 0; i < byteCharacters.length; i++) {
     byteNumbers[i] = byteCharacters.charCodeAt(i);
   }
   const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: mimeType });
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(`${Date.now()}_${fileName}`, blob, { contentType: mimeType, upsert: true });
-
-  if (error) throw error;
-
-  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
-  return publicUrl;
+  return await uploadToSupabase(bucket, fileName, byteArray, mimeType);
 };
 
 export const generateStoryTranscript = async (
@@ -64,8 +122,7 @@ export const generateCoverImage = async (apiKey: string, story: Story): Promise<
 
     if (!base64) throw new Error("No image data returned.");
 
-    // Upload to Supabase
-    return await uploadToSupabase('thumbnails', `${story.id}.png`, base64, 'image/png');
+    return await uploadBase64ToSupabase('thumbnails', `${story.id}.png`, base64, 'image/png');
   } catch (error: any) {
     throw new Error(error.message || "Image generation failed.");
   }
@@ -78,7 +135,7 @@ export const generateAudioSpeech = async (apiKey: string, story: Story): Promise
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Say naturally and cinematically: ${story.transcript.substring(0, 1000)}` }] }],
+      contents: [{ parts: [{ text: `Say naturally and cinematically: ${story.transcript.substring(0, 1500)}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
@@ -90,11 +147,18 @@ export const generateAudioSpeech = async (apiKey: string, story: Story): Promise
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) throw new Error("No audio data returned.");
 
-    // Upload PCM to Supabase
-    // Note: To be perfectly playable in browser, usually we'd wrap in WAV, 
-    // but many modern players handle raw data if the mime is set correctly.
-    // For safety, we upload as pcm or webm depending on what the player expects.
-    return await uploadToSupabase('audio', `${story.id}.wav`, base64Audio, 'audio/wav');
+    // Decode base64 to raw bytes
+    const binaryString = atob(base64Audio);
+    const pcmData = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      pcmData[i] = binaryString.charCodeAt(i);
+    }
+
+    // Wrap raw PCM in a WAV header
+    const wavData = createWavHeader(pcmData, 24000);
+
+    // Upload the valid WAV file to Supabase
+    return await uploadToSupabase('audio', `${story.id}.wav`, wavData, 'audio/wav');
   } catch (error: any) {
     throw new Error(error.message || "Audio generation failed.");
   }
