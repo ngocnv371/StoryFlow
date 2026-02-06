@@ -74,11 +74,13 @@ const Home: React.FC = () => {
             {stories.slice(0, 5).map(story => (
               <div key={story.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
                 <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={story.thumbnail} className="w-full h-full object-cover" alt="" />
+                  {/* Fixed: Use thumbnail_url instead of thumbnail */}
+                  <img src={story.thumbnail_url} className="w-full h-full object-cover" alt="" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-800 truncate">{story.title}</p>
-                  <p className="text-xs text-slate-500">{new Date(story.createdAt).toLocaleDateString()}</p>
+                  {/* Fixed: Use created_at instead of createdAt */}
+                  <p className="text-xs text-slate-500">{new Date(story.created_at).toLocaleDateString()}</p>
                 </div>
                 <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
                   story.status === 'Completed' ? 'bg-emerald-100 text-emerald-600' :

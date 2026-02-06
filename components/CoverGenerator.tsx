@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { setImageGenStatus, updateStoryThumbnail } from '../store/storiesSlice';
+import { AppDispatch, RootState } from '../store';
+import { setImageGenStatus, updateStoryRemote } from '../store/storiesSlice';
+import { showAlert } from '../store/uiSlice';
 import { generateCoverImage } from '../services/geminiService';
 import { Story } from '../types';
 
@@ -11,7 +12,7 @@ interface CoverGeneratorProps {
 }
 
 const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const config = useSelector((state: RootState) => state.config.textGen);
   const status = useSelector((state: RootState) => state.stories.imageGenerationStatuses[story.id] || 'idle');
   const [showTooltip, setShowTooltip] = useState(false);
@@ -27,12 +28,16 @@ Style: High-quality digital concept art, epic lighting, professional composition
     dispatch(setImageGenStatus({ id: story.id, status: 'generating' }));
     try {
       const imageUrl = await generateCoverImage(config.apiKey, story);
-      dispatch(updateStoryThumbnail({ id: story.id, thumbnail: imageUrl }));
+      await dispatch(updateStoryRemote({ ...story, thumbnail_url: imageUrl }));
       dispatch(setImageGenStatus({ id: story.id, status: 'idle' }));
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       dispatch(setImageGenStatus({ id: story.id, status: 'error' }));
-      alert("Failed to generate cover image. Please check your API key.");
+      dispatch(showAlert({
+        title: 'Art Generation Failed',
+        message: error.message || 'Check your Gemini API key in settings.',
+        type: 'error'
+      }));
     }
   };
 
@@ -68,7 +73,6 @@ Style: High-quality digital concept art, epic lighting, professional composition
         )}
       </button>
 
-      {/* Hover Tooltip */}
       {showTooltip && (
         <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-4 bg-slate-900 text-white text-[11px] rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none">
           <div className="font-bold text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-1">

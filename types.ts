@@ -1,13 +1,15 @@
 
 export interface Story {
   id: string;
+  user_id: string;
   title: string;
   summary: string;
   tags: string[];
   transcript: string;
   status: 'Draft' | 'Pending' | 'Completed';
-  createdAt: string;
-  thumbnail: string;
+  created_at: string;
+  thumbnail_url: string;
+  audio_url?: string;
 }
 
 export type TextGenProvider = 'gemini' | 'openai';
@@ -28,8 +30,9 @@ export interface AudioGenConfig {
 }
 
 export interface User {
+  id: string;
+  email: string;
   username: string;
-  role: string;
 }
 
 export interface AppConfig {

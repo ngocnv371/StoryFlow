@@ -1,84 +1,101 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { TextGenConfig, Story } from "../types";
+import { supabase } from "../supabaseClient";
+
+/**
+ * Uploads a base64 string to Supabase Storage
+ */
+const uploadToSupabase = async (bucket: string, fileName: string, base64Data: string, mimeType: string) => {
+  // Convert base64 to Blob
+  const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: mimeType });
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(`${Date.now()}_${fileName}`, blob, { contentType: mimeType, upsert: true });
+
+  if (error) throw error;
+
+  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
+  return publicUrl;
+};
 
 export const generateStoryTranscript = async (
   config: TextGenConfig,
   storyDetails: { title: string; summary: string; tags: string[] }
 ): Promise<string> => {
   const apiKey = config.apiKey || process.env.API_KEY || '';
-  
-  if (!apiKey && config.provider === 'gemini') {
-    throw new Error("Missing API Key for Gemini. Please configure it in settings.");
-  }
-
   const ai = new GoogleGenAI({ apiKey });
-  const modelName = config.model || 'gemini-3-flash-preview';
-
-  const prompt = `
-    Generate a detailed story transcript based on the following information:
-    Title: ${storyDetails.title}
-    Summary: ${storyDetails.summary}
-    Tags: ${storyDetails.tags.join(', ')}
-
-    Please write a cinematic and engaging script or narrative transcript for this story.
-  `;
+  const prompt = `Generate a detailed cinematic story transcript for: ${storyDetails.title}. Summary: ${storyDetails.summary}. Tags: ${storyDetails.tags.join(', ')}`;
 
   try {
     const response = await ai.models.generateContent({
-      model: modelName,
+      model: config.model || 'gemini-3-flash-preview',
       contents: prompt,
-      config: {
-        temperature: 0.7,
-        topP: 0.9,
-      },
     });
-
     return response.text || "Failed to generate transcript.";
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    throw new Error(error.message || "An error occurred during transcript generation.");
+    throw new Error(error.message || "Transcript generation failed.");
   }
 };
 
-export const generateCoverImage = async (
-  apiKey: string,
-  story: Story
-): Promise<string> => {
+export const generateCoverImage = async (apiKey: string, story: Story): Promise<string> => {
   const finalApiKey = apiKey || process.env.API_KEY || '';
-  if (!finalApiKey) {
-    throw new Error("Missing API Key for Image Generation.");
-  }
-
   const ai = new GoogleGenAI({ apiKey: finalApiKey });
-  const prompt = `Artistic, cinematic cover art for a story. 
-Title: ${story.title}. 
-Summary: ${story.summary}. 
-Atmosphere: ${story.tags.join(', ')}. 
-Context: ${story.transcript.substring(0, 300)}...
-Style: High-quality digital concept art, epic lighting, professional composition.`;
+  const prompt = `Cinematic digital art cover for: ${story.title}. Themes: ${story.tags.join(', ')}.`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: prompt }]
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "16:9"
-        }
-      }
+      contents: { parts: [{ text: prompt }] },
+      config: { imageConfig: { aspectRatio: "16:9" } }
     });
 
+    let base64 = "";
     for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
+      if (part.inlineData) base64 = part.inlineData.data;
     }
-    throw new Error("No image data returned from model.");
+
+    if (!base64) throw new Error("No image data returned.");
+
+    // Upload to Supabase
+    return await uploadToSupabase('thumbnails', `${story.id}.png`, base64, 'image/png');
   } catch (error: any) {
-    console.error("Image Generation Error:", error);
-    throw new Error(error.message || "Failed to generate image.");
+    throw new Error(error.message || "Image generation failed.");
+  }
+};
+
+export const generateAudioSpeech = async (apiKey: string, story: Story): Promise<string> => {
+  const finalApiKey = apiKey || process.env.API_KEY || '';
+  const ai = new GoogleGenAI({ apiKey: finalApiKey });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Say naturally and cinematically: ${story.transcript.substring(0, 1000)}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) throw new Error("No audio data returned.");
+
+    // Upload PCM to Supabase
+    // Note: To be perfectly playable in browser, usually we'd wrap in WAV, 
+    // but many modern players handle raw data if the mime is set correctly.
+    // For safety, we upload as pcm or webm depending on what the player expects.
+    return await uploadToSupabase('audio', `${story.id}.wav`, base64Audio, 'audio/wav');
+  } catch (error: any) {
+    throw new Error(error.message || "Audio generation failed.");
   }
 };
