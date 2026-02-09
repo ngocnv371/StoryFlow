@@ -12,29 +12,35 @@ const Login: React.FC = () => {
   const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
-    if (isSignUp) {
-      const { error } = await signUp(email, password, name);
-      if (error) {
-        setError(error.message);
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, name);
+        if (error) {
+          setError(error.message);
+        } else {
+          dispatch(showAlert({
+            title: 'Account Created',
+            message: 'Please check your email for a confirmation link to activate your account.',
+            type: 'success'
+          }));
+          setIsSignUp(false);
+        }
       } else {
-        dispatch(showAlert({
-          title: 'Account Created',
-          message: 'Please check your email for a confirmation link to activate your account.',
-          type: 'success'
-        }));
-        setIsSignUp(false);
+        const { error } = await signIn(email, password);
+        if (error) setError(error.message);
+        else navigate('/');
       }
-    } else {
-      const { error } = await signIn(email, password);
-      if (error) setError(error.message);
-      else navigate('/');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,8 +72,14 @@ const Login: React.FC = () => {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
           
-          <button type="submit" className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-all">
-            {isSignUp ? 'Sign Up' : 'Log In'}
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            {loading && (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Log In')}
           </button>
           
           <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="w-full text-indigo-600 text-sm font-bold hover:underline">
