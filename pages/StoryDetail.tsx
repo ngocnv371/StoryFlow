@@ -97,7 +97,28 @@ const StoryDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Narrator</label>
+              <input 
+                value={formData.narrator || ''} 
+                onChange={e => setFormData({...formData, narrator: e.target.value})} 
+                className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                placeholder="e.g., Morgan Freeman, David Attenborough..."
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Music</label>
+              <input 
+                value={formData.music || ''} 
+                onChange={e => setFormData({...formData, music: e.target.value})} 
+                className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                placeholder="e.g., Calm piano, Epic orchestral..."
+              />
+            </div>
+          </div>
           <div className="bg-white rounded-2xl border shadow-sm h-[700px] flex flex-col overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-2">
@@ -106,7 +127,7 @@ const StoryDetail: React.FC = () => {
               </div>
               <TranscriptGenerator 
                 story={formData} 
-                onGenerated={(transcript) => setFormData(prev => prev ? ({ ...prev, transcript }) : null)} 
+                onGenerated={(data) => setFormData(prev => prev ? ({ ...prev, transcript: data.transcript, narrator: data.narrator, music: data.music }) : null)} 
               />
             </div>
             <textarea 
@@ -116,6 +137,7 @@ const StoryDetail: React.FC = () => {
               placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..." 
             />
           </div>
+
         </div>
       </div>
       <ImageInspector isOpen={isInspectorOpen} onClose={() => setIsInspectorOpen(false)} imageUrl={formData.thumbnail_url} title={formData.title} />

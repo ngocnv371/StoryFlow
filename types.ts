@@ -6,6 +6,8 @@ export interface Story {
   summary: string;
   tags: string[];
   transcript: string;
+  narrator?: string;
+  music?: string;
   status: 'Draft' | 'Pending' | 'Completed';
   created_at: string;
   thumbnail_url: string;

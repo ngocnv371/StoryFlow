@@ -90,10 +90,29 @@ const uploadBase64ToSupabase = async (bucket: string, fileName: string, base64Da
 export const generateStoryTranscript = async (
   config: TextGenConfig,
   storyDetails: { title: string; summary: string; tags: string[] }
-): Promise<string> => {
+): Promise<{ transcript: string; narrator: string; music: string }> => {
   const apiKey = config.apiKey || process.env.API_KEY || '';
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `Generate a cinematic story transcript meant for narration using TTS service. Title: ${storyDetails.title}. Summary: ${storyDetails.summary}. Tags: ${storyDetails.tags.join(', ')}`;
+  const prompt = `Generate a cinematic story transcript meant for narration using TTS service.
+
+Title: ${storyDetails.title}
+Summary: ${storyDetails.summary}
+Tags: ${storyDetails.tags.join(', ')}
+
+IMPORTANT INSTRUCTIONS:
+1. Return your response in JSON format with exactly these three fields:
+   - "transcript": The story narration in plain text
+   - "narrator": A brief description of the narrator's voice characteristics (tone, pace, emotion, accent, etc.)
+   - "music": A brief description of the recommended background music (genre, mood, tempo, instruments, etc.)
+
+2. The transcript should be pure narration text and paragraphs only - no stage directions, no formatting, no metadata.
+
+Example format:
+{
+  "transcript": "Once upon a time in a distant galaxy...",
+  "narrator": "A warm, authoritative male voice with a mysterious tone and deliberate pacing",
+  "music": "Ambient orchestral with ethereal strings, slow tempo, creating a sense of wonder and mystery"
+}`;
 
   try {
     const response = await ai.models.generateContent({
@@ -103,9 +122,30 @@ export const generateStoryTranscript = async (
     
     if (!response.text) {
       console.warn("Gemini returned an empty response for transcript:", response);
+      throw new Error("Empty response from AI model");
     }
     
-    return response.text || "Failed to generate transcript.";
+    // Parse JSON response
+    const text = response.text.trim();
+    // Remove markdown code blocks if present
+    const cleanedText = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+    
+    try {
+      const parsed = JSON.parse(cleanedText);
+      return {
+        transcript: parsed.transcript || "Failed to generate transcript.",
+        narrator: parsed.narrator || "Neutral narrator voice",
+        music: parsed.music || "Ambient background music"
+      };
+    } catch (parseError) {
+      console.error("Failed to parse JSON response:", cleanedText);
+      // Fallback: use the raw text as transcript
+      return {
+        transcript: cleanedText,
+        narrator: "Neutral narrator voice",
+        music: "Ambient background music"
+      };
+    }
   } catch (error: any) {
     console.error("Transcript generation error details:", error);
     throw new Error(error.message || "Transcript generation failed.");
