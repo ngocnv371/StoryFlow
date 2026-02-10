@@ -66,7 +66,7 @@ const AlertDialog: React.FC = () => {
         </div>
         <div className="p-8 text-center space-y-3">
           <h3 className="text-xl font-bold text-slate-900">{title}</h3>
-          <p className="text-slate-500 leading-relaxed">{message}</p>
+          <p className="text-slate-500 leading-relaxed line-clamp-6">{message}</p>
           <button 
             onClick={() => dispatch(hideAlert())}
             className={`w-full mt-6 py-3 px-4 text-white font-bold rounded-2xl transition-all shadow-lg ${typeStyles.btn}`}
