@@ -39,7 +39,7 @@ const uploadBase64ToSupabase = async (bucket: string, fileName: string, base64Da
 export const generateStoryTranscript = async (
   config: TextGenConfig,
   storyDetails: Story
-): Promise<Pick<Story, "transcript" | "narrator" | "music" | "tags">> => {
+): Promise<Pick<Story, "title" | "transcript" | "narrator" | "music" | "tags">> => {
   const apiKey = config.apiKey || process.env.API_KEY || '';
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Generate a dramatic story transcript meant for narration using TTS service.
@@ -48,11 +48,12 @@ Title: ${storyDetails.title}
 Summary: ${storyDetails.summary}
 
 IMPORTANT INSTRUCTIONS:
-1. Return your response in JSON format with exactly these four fields:
+1. Return your response in JSON format with exactly these five fields:
+   - "title": An engaging, catchy title for the story (improve upon the provided title if needed)
    - "transcript": The story narration in plain text
    - "narrator": A brief description of the narrator's voice characteristics (tone, pace, emotion, accent, etc.)
    - "music": A brief description of the recommended background music (genre, mood, tempo, instruments, etc.)
-- "tags": An array of 8-15 YouTube-style tags (short keywords/phrases relevant to the story - mix of genres, themes, moods, and related topics)
+   - "tags": An array of 8-15 YouTube-style tags (short keywords/phrases relevant to the story - mix of genres, themes, moods, and related topics)
 
 2. The transcript should be pure narration text only - no stage directions, no formatting, no metadata. Can contain multiple paragraphs as needed.
 
@@ -60,6 +61,7 @@ IMPORTANT INSTRUCTIONS:
 
 Example format:
 {
+  "title": "The Last Star Guardian",
   "transcript": "Once upon a time in a distant galaxy...",
   "narrator": "A warm, authoritative male voice with a mysterious tone and deliberate pacing",
   "music": "Ambient orchestral with ethereal strings, slow tempo, creating a sense of wonder and mystery",
@@ -85,6 +87,7 @@ Example format:
     try {
       const parsed = JSON.parse(cleanedText);
       return {
+        title: parsed.title || storyDetails.title,
         transcript: parsed.transcript || "Failed to generate transcript.",
         narrator: parsed.narrator || "Neutral narrator voice",
         music: parsed.music || "Ambient background music",
@@ -94,6 +97,7 @@ Example format:
       console.error("Failed to parse JSON response:", cleanedText);
       // Fallback: use the raw text as transcript
       return {
+        title: storyDetails.title,
         transcript: cleanedText,
         narrator: "Neutral narrator voice",
         music: "Ambient background music",
