@@ -1,6 +1,6 @@
 
 import { configureStore } from '@reduxjs/toolkit';
-import configReducer from './configSlice';
+import configReducer, { saveConfigToStorage } from './configSlice';
 import storiesReducer from './storiesSlice';
 import uiReducer from './uiSlice';
 
@@ -10,6 +10,12 @@ export const store = configureStore({
     stories: storiesReducer,
     ui: uiReducer,
   },
+});
+
+// Subscribe to store changes and persist config to localStorage
+store.subscribe(() => {
+  const state = store.getState();
+  saveConfigToStorage(state.config);
 });
 
 export type RootState = ReturnType<typeof store.getState>;

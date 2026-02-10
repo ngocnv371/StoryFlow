@@ -16,6 +16,7 @@ export interface Story {
 
 export type TextGenProvider = 'gemini' | 'openai';
 export type AudioGenProvider = 'gemini' | 'elevenlabs' | 'whisper';
+export type ImageGenProvider = 'gemini' | 'comfyui';
 
 export interface TextGenConfig {
   provider: TextGenProvider;
@@ -31,6 +32,12 @@ export interface AudioGenConfig {
   endpoint?: string;
 }
 
+export interface ImageGenConfig {
+  provider: ImageGenProvider;
+  apiKey: string;
+  endpoint?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -40,4 +47,5 @@ export interface User {
 export interface AppConfig {
   textGen: TextGenConfig;
   audioGen: AudioGenConfig;
+  imageGen: ImageGenConfig;
 }

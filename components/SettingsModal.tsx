@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { setTextGenConfig, setAudioGenConfig } from '../store/configSlice';
-import { TextGenProvider, AudioGenProvider } from '../types';
+import { setTextGenConfig, setAudioGenConfig, setImageGenConfig } from '../store/configSlice';
+import { TextGenProvider, AudioGenProvider, ImageGenProvider } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const config = useSelector((state: RootState) => state.config);
-  const [activeTab, setActiveTab] = useState<'text' | 'audio'>('text');
+  const [activeTab, setActiveTab] = useState<'text' | 'audio' | 'image'>('text');
 
   if (!isOpen) return null;
 
@@ -39,6 +39,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'audio' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Audio Generation
+          </button>
+          <button
+            onClick={() => setActiveTab('image')}
+            className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'image' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Image Generation
           </button>
         </div>
 
@@ -92,7 +98,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 />
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'audio' ? (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
@@ -114,6 +120,44 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   value={config.audioGen.apiKey}
                   placeholder="Enter provider API key"
                   onChange={(e) => dispatch(setAudioGenConfig({ apiKey: e.target.value }))}
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
+                <select
+                  value={config.imageGen.provider}
+                  onChange={(e) => dispatch(setImageGenConfig({ provider: e.target.value as ImageGenProvider }))}
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="gemini">Google Gemini (Recommended)</option>
+                  <option value="comfyui">ComfyUI</option>
+                </select>
+              </div>
+
+              {config.imageGen.provider === 'comfyui' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
+                  <input
+                    type="text"
+                    value={config.imageGen.endpoint}
+                    placeholder="https://your-comfyui-endpoint.com/api"
+                    onChange={(e) => dispatch(setImageGenConfig({ endpoint: e.target.value }))}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                <input
+                  type="password"
+                  value={config.imageGen.apiKey}
+                  placeholder={config.imageGen.provider === 'gemini' ? 'Enter your Gemini API key' : 'Enter your ComfyUI API token'}
+                  onChange={(e) => dispatch(setImageGenConfig({ apiKey: e.target.value }))}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
