@@ -38,8 +38,8 @@ const uploadBase64ToSupabase = async (bucket: string, fileName: string, base64Da
 
 export const generateStoryTranscript = async (
   config: TextGenConfig,
-  storyDetails: { title: string; summary: string; tags: string[] }
-): Promise<{ transcript: string; narrator: string; music: string; tags: string[] }> => {
+  storyDetails: Story
+): Promise<Pick<Story, "transcript" | "narrator" | "music" | "tags">> => {
   const apiKey = config.apiKey || process.env.API_KEY || '';
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Generate a dramatic story transcript meant for narration using TTS service.

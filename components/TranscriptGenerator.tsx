@@ -9,7 +9,7 @@ import { Story } from '../types';
 
 interface TranscriptGeneratorProps {
   story: Story;
-  onGenerated?: (data: { transcript: string; narrator: string; music: string; tags: string[] }) => void;
+  onGenerated?: (data: Pick<Story, "transcript" | "narrator" | "music" | "tags">) => void;
 }
 
 const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGenerated }) => {
