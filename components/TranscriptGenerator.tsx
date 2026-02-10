@@ -9,7 +9,7 @@ import { Story } from '../types';
 
 interface TranscriptGeneratorProps {
   story: Story;
-  onGenerated?: (data: { transcript: string; narrator: string; music: string }) => void;
+  onGenerated?: (data: { transcript: string; narrator: string; music: string; tags: string[] }) => void;
 }
 
 const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGenerated }) => {
@@ -29,14 +29,14 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
 
     dispatch(setTranscriptGenStatus({ id: story.id, status: 'generating' }));
     try {
-      const { transcript, narrator, music } = await generateStoryTranscript(config, story);
+      const { transcript, narrator, music, tags } = await generateStoryTranscript(config, story);
       
-      // Update remote storage with all three fields
-      await dispatch(updateStoryRemote({ ...story, transcript, narrator, music }));
+      // Update remote storage with all fields
+      await dispatch(updateStoryRemote({ ...story, transcript, narrator, music, tags }));
       
       // Notify parent to update local state immediately if needed
       if (onGenerated) {
-        onGenerated({ transcript, narrator, music });
+        onGenerated({ transcript, narrator, music, tags });
       }
       
       dispatch(setTranscriptGenStatus({ id: story.id, status: 'idle' }));

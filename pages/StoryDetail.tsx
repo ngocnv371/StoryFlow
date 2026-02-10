@@ -127,7 +127,7 @@ const StoryDetail: React.FC = () => {
               </div>
               <TranscriptGenerator 
                 story={formData} 
-                onGenerated={(data) => setFormData(prev => prev ? ({ ...prev, transcript: data.transcript, narrator: data.narrator, music: data.music }) : null)} 
+                onGenerated={(data) => setFormData(prev => prev ? ({ ...prev, transcript: data.transcript, narrator: data.narrator, music: data.music, tags: data.tags }) : null)} 
               />
             </div>
             <textarea 
