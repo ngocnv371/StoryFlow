@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setVideoGenStatus } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
-import { compileStoryVideo, downloadVideo } from '../services/video';
+import { compileStoryVideo } from '../services/encoder-webm';
 import { Story } from '../types';
+import { downloadVideo } from '@/services/util';
 
 interface VideoGeneratorProps {
   story: Story;
