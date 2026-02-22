@@ -11,8 +11,20 @@ import StoryDetail from './pages/StoryDetail';
 import Login from './pages/Login';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
+  
+  // Only redirect to login if we're done loading and there's no user
   if (!user) return <Navigate to="/login" replace />;
+  
   return <Layout>{children}</Layout>;
 };
 
