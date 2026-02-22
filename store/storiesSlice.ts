@@ -10,6 +10,7 @@ interface StoriesState {
   imageGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   audioGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   transcriptGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
+  videoGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
 }
 
 export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
@@ -65,6 +66,7 @@ const initialState: StoriesState = {
   imageGenerationStatuses: {},
   audioGenerationStatuses: {},
   transcriptGenerationStatuses: {},
+  videoGenerationStatuses: {},
 };
 
 const storiesSlice = createSlice({
@@ -79,6 +81,9 @@ const storiesSlice = createSlice({
     },
     setTranscriptGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
       state.transcriptGenerationStatuses[action.payload.id] = action.payload.status;
+    },
+    setVideoGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
+      state.videoGenerationStatuses[action.payload.id] = action.payload.status;
     },
   },
   extraReducers: (builder) => {
@@ -102,5 +107,5 @@ const storiesSlice = createSlice({
   }
 });
 
-export const { setImageGenStatus, setAudioGenStatus, setTranscriptGenStatus } = storiesSlice.actions;
+export const { setImageGenStatus, setAudioGenStatus, setTranscriptGenStatus, setVideoGenStatus } = storiesSlice.actions;
 export default storiesSlice.reducer;

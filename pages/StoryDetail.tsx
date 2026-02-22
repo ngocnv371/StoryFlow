@@ -7,6 +7,7 @@ import { updateStoryRemote } from '../store/storiesSlice';
 import { Story } from '../types';
 import CoverGenerator from '../components/CoverGenerator';
 import AudioGenerator from '../components/AudioGenerator';
+import VideoGenerator from '../components/VideoGenerator';
 import TranscriptGenerator from '../components/TranscriptGenerator';
 import ImageInspector from '../components/ImageInspector';
 import TagEditor from '../components/TagEditor';
@@ -61,6 +62,7 @@ const StoryDetail: React.FC = () => {
             
             <CoverGenerator story={formData} />
             <AudioGenerator story={formData} />
+            <VideoGenerator story={formData} />
 
             {formData.audio_url && (
               <div className="p-4 bg-slate-50 rounded-xl space-y-2 border">
