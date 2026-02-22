@@ -190,3 +190,15 @@ export const generateAudioSpeech = async (apiKey: string, story: Story): Promise
     throw new Error(error.message || "Audio generation failed.");
   }
 };
+
+/**
+ * Uploads a video blob to Supabase Storage and returns the public URL
+ */
+export const uploadVideoToSupabase = async (storyId: string, videoBlob: Blob): Promise<string> => {
+  try {
+    return await uploadToSupabase('video', `${storyId}.webm`, videoBlob, 'video/webm');
+  } catch (error: any) {
+    console.error("Video upload error details:", error);
+    throw new Error(error.message || "Video upload failed.");
+  }
+};

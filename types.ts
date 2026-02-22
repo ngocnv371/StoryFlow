@@ -12,6 +12,7 @@ export interface Story {
   created_at: string;
   thumbnail_url: string;
   audio_url?: string;
+  video_url?: string;
 }
 
 export type TextGenProvider = 'gemini' | 'openai';

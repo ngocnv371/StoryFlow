@@ -71,6 +71,22 @@ const StoryDetail: React.FC = () => {
               </div>
             )}
 
+            {formData.video_url && (
+              <div className="p-4 bg-slate-50 rounded-xl space-y-2 border">
+                <p className="text-xs font-bold text-slate-400 uppercase">Saved Video</p>
+                <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                  <video 
+                    controls 
+                    className="w-full h-full" 
+                    src={formData.video_url}
+                    title="Story video"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4 pt-2 border-t">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Title</label>

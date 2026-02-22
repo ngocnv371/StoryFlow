@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
-import { setVideoGenStatus } from '../store/storiesSlice';
+import { setVideoGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
+import { uploadVideoToSupabase } from '../services/geminiService';
 import { Story } from '../types';
 import { downloadVideo } from '@/services/util';
 
@@ -18,6 +19,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const [progress, setProgress] = useState(0);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleDownload = () => {
     if (videoBlob) {
@@ -29,6 +31,31 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         message: 'Your story video has been downloaded in WebM format with VP9 codec.',
         type: 'success'
       }));
+    }
+  };
+
+  const handleSaveToSupabase = async () => {
+    if (!videoBlob) return;
+
+    setIsSaving(true);
+    try {
+      const videoUrl = await uploadVideoToSupabase(story.id, videoBlob);
+      await dispatch(updateStoryRemote({ ...story, video_url: videoUrl }));
+      
+      dispatch(showAlert({
+        title: 'Video Saved!',
+        message: 'Your story video has been saved to Supabase storage.',
+        type: 'success'
+      }));
+    } catch (error: any) {
+      console.error('Video save error:', error);
+      dispatch(showAlert({
+        title: 'Save Failed',
+        message: error.message || 'Failed to save video to storage.',
+        type: 'error'
+      }));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -76,7 +103,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       
       dispatch(showAlert({
         title: 'Video Compiled!',
-        message: 'Preview your video below. Click download if you\'re satisfied.',
+        message: 'Preview your video below. You can save it to the cloud or download it locally.',
         type: 'success'
       }));
       
@@ -161,6 +188,10 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
               <span className={`w-2 h-2 rounded-full ${story.audio_url ? 'bg-green-400' : 'bg-red-400'}`}></span>
               <span>Audio: {story.audio_url ? 'Ready' : 'Required'}</span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${story.video_url ? 'bg-green-400' : 'bg-gray-300'}`}></span>
+              <span>Video: {story.video_url ? 'Saved to Cloud' : 'Not uploaded'}</span>
+            </div>
             <p className="mt-2 italic leading-relaxed text-slate-300">
               Creates a video using hybrid MediaRecorder approach with precise frame control at 24 FPS, matching audio duration with your cover art as the background.
             </p>
@@ -172,7 +203,17 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       {hasCompiledVideo && (
         <div className="bg-white p-4 rounded-xl border shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-gray-800">Video Preview</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-gray-800">Video Preview</h3>
+              {story.video_url && (
+                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                  </svg>
+                  Saved to Cloud
+                </div>
+              )}
+            </div>
             <button
               onClick={handleReset}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -196,6 +237,30 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
           </div>
           
           <div className="flex gap-3">
+            <button
+              onClick={handleSaveToSupabase}
+              disabled={isSaving}
+              className={`flex-1 ${
+                isSaving 
+                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200 hover:-translate-y-0.5'
+              } text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span>Save to Cloud</span>
+                </>
+              )}
+            </button>
+            
             <button
               onClick={handleDownload}
               className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-green-200 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
