@@ -2,8 +2,8 @@ import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedStoryText } from '../types';
-import imageWorkflow from './comfy-zimage.json';
-import image1Workflow from './comfy-sample-flow.json';
+import comfyZImageWorkflow from './comfy-zimage.json';
+import comfySD35Workflow from './comfy-image-sd35.json';
 
 const COMFY_POLL_INTERVAL_MS = 1500;
 const COMFY_MAX_POLL_ATTEMPTS = 80;
@@ -182,10 +182,10 @@ async function pollForComfyImage(
   throw new Error(`Timed out waiting for ComfyUI image result for prompt_id ${promptId}.`);
 }
 
-function createWorkflow(story: Story, config: AppConfig) {
+function createZImageWorkflow(story: Story, config: AppConfig) {
   const prompt = constructImagePrompt(story);
 
-  const workflow = JSON.parse(JSON.stringify(imageWorkflow));
+  const workflow = JSON.parse(JSON.stringify(comfyZImageWorkflow));
   // the indexes "6" and "13" are based on the structure of comfy-zimage.json and may need to be updated if the workflow changes
   workflow["6"].inputs.text = prompt;
   workflow["13"].inputs.width = config.imageGen.width || 512;
@@ -193,11 +193,11 @@ function createWorkflow(story: Story, config: AppConfig) {
   return workflow;
 }
 
-function createWorkflow1(story: Story, config: AppConfig) {
+function createSD35ImageWorkflow(story: Story, config: AppConfig) {
   const prompt = constructImagePrompt(story);
 
-  const workflow = JSON.parse(JSON.stringify(image1Workflow));
-  // the indexes "6" and "13" are based on the structure of comfy-zimage.json and may need to be updated if the workflow changes
+  const workflow = JSON.parse(JSON.stringify(comfySD35Workflow));
+  // the indexes "6" and "5" are based on the structure of comfy-sample-flow.json and may need to be updated if the workflow changes
   workflow["6"].inputs.text = prompt;
   workflow["5"].inputs.width = config.imageGen.width || 512;
   workflow["5"].inputs.height = config.imageGen.height || 512;
@@ -227,7 +227,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          prompt: createWorkflow1(story, config),
+          prompt: createSD35ImageWorkflow(story, config),
           storyId: story.id,
           aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
           width: config.imageGen.width,
