@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { setTextGenConfig, setAudioGenConfig, setImageGenConfig } from '../store/configSlice';
-import { TextGenProvider, AudioGenProvider, ImageGenProvider } from '../types';
+import { setProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig } from '../store/configSlice';
+import { AIProvider } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const config = useSelector((state: RootState) => state.config);
-  const [activeTab, setActiveTab] = useState<'text' | 'audio' | 'image'>('text');
+  const [activeTab, setActiveTab] = useState<'provider' | 'audio' | 'image'>('provider');
 
   if (!isOpen) return null;
 
@@ -29,97 +29,138 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab('text')}
-            className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'text' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            onClick={() => setActiveTab('provider')}
+            className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'provider' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Text Generation
+            Provider
           </button>
           <button
             onClick={() => setActiveTab('audio')}
             className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'audio' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Audio Generation
+            Audio
           </button>
           <button
             onClick={() => setActiveTab('image')}
             className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'image' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Image Generation
+            Image
           </button>
         </div>
 
         <div className="p-6 overflow-y-auto space-y-6">
-          {activeTab === 'text' ? (
+          {activeTab === 'provider' ? (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
                 <select
-                  value={config.textGen.provider}
-                  onChange={(e) => dispatch(setTextGenConfig({ provider: e.target.value as TextGenProvider }))}
+                  value={config.provider}
+                  onChange={(e) => dispatch(setProvider(e.target.value as AIProvider))}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
-                  <option value="gemini">Google Gemini (Recommended)</option>
-                  <option value="openai">OpenAI Compatible Service</option>
+                  <option value="gemini">Gemini</option>
+                  <option value="comfyui">ComfyUI</option>
                 </select>
               </div>
 
-              {config.textGen.provider === 'openai' && (
+              {config.provider === 'gemini' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+                    <input
+                      type="password"
+                      value={config.gemini.apiKey}
+                      placeholder="Enter your Gemini API key"
+                      onChange={(e) => dispatch(setGeminiConfig({ apiKey: e.target.value }))}
+                      className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Text Model Name</label>
+                    <input
+                      type="text"
+                      value={config.gemini.textModel}
+                      placeholder="gemini-3-flash-preview"
+                      onChange={(e) => dispatch(setGeminiConfig({ textModel: e.target.value }))}
+                      className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Audio Model Name</label>
+                    <input
+                      type="text"
+                      value={config.gemini.audioModel}
+                      placeholder="gemini-2.5-flash-preview-tts"
+                      onChange={(e) => dispatch(setGeminiConfig({ audioModel: e.target.value }))}
+                      className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Image Model Name</label>
+                    <input
+                      type="text"
+                      value={config.gemini.imageModel}
+                      placeholder="gemini-2.5-flash-image"
+                      onChange={(e) => dispatch(setGeminiConfig({ imageModel: e.target.value }))}
+                      className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                </>
+              ) : (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Base Endpoint</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ComfyUI URL</label>
                   <input
                     type="text"
-                    value={config.textGen.endpoint}
-                    placeholder="https://api.openai.com/v1"
-                    onChange={(e) => dispatch(setTextGenConfig({ endpoint: e.target.value }))}
+                    value={config.comfy.endpoint}
+                    placeholder="http://127.0.0.1:8188/prompt"
+                    onChange={(e) => dispatch(setComfyConfig({ endpoint: e.target.value }))}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+
+              )}
+
+              {config.provider === 'comfyui' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ComfyUI API Key</label>
+                  <input
+                    type="password"
+                    value={config.comfy.apiKey}
+                    placeholder="Enter your ComfyUI API token"
+                    onChange={(e) => dispatch(setComfyConfig({ apiKey: e.target.value }))}
                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>
               )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">API Key</label>
-                <input
-                  type="password"
-                  value={config.textGen.apiKey}
-                  placeholder="Enter your API key"
-                  onChange={(e) => dispatch(setTextGenConfig({ apiKey: e.target.value }))}
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Model Name</label>
-                <input
-                  type="text"
-                  value={config.textGen.model}
-                  placeholder={config.textGen.provider === 'gemini' ? 'gemini-3-flash-preview' : 'gpt-4o'}
-                  onChange={(e) => dispatch(setTextGenConfig({ model: e.target.value }))}
-                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
             </div>
           ) : activeTab === 'audio' ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
-                <select
-                  value={config.audioGen.provider}
-                  onChange={(e) => dispatch(setAudioGenConfig({ provider: e.target.value as AudioGenProvider }))}
+                <label className="block text-sm font-medium text-slate-700 mb-1">Voice</label>
+                <input
+                  type="text"
+                  value={config.audioGen.voice || ''}
+                  placeholder="Kore"
+                  onChange={(e) => dispatch(setAudioGenConfig({ voice: e.target.value }))}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="gemini">Google Gemini TTS</option>
-                  <option value="elevenlabs">ElevenLabs</option>
-                  <option value="whisper">OpenAI Whisper (STT)</option>
-                </select>
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Speed</label>
                 <input
-                  type="password"
-                  value={config.audioGen.apiKey}
-                  placeholder="Enter provider API key"
-                  onChange={(e) => dispatch(setAudioGenConfig({ apiKey: e.target.value }))}
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={config.audioGen.speed ?? 1}
+                  onChange={(e) => {
+                    const speed = Number.parseFloat(e.target.value);
+                    dispatch(setAudioGenConfig({ speed: Number.isNaN(speed) ? 1 : speed }));
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>
@@ -127,37 +168,47 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
-                <select
-                  value={config.imageGen.provider}
-                  onChange={(e) => dispatch(setImageGenConfig({ provider: e.target.value as ImageGenProvider }))}
+                <label className="block text-sm font-medium text-slate-700 mb-1">Width</label>
+                <input
+                  type="number"
+                  min="256"
+                  step="64"
+                  value={config.imageGen.width ?? 1280}
+                  onChange={(e) => {
+                    const width = Number.parseInt(e.target.value, 10);
+                    dispatch(setImageGenConfig({ width: Number.isNaN(width) ? 1280 : width }));
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="gemini">Google Gemini (Recommended)</option>
-                  <option value="comfyui">ComfyUI</option>
-                </select>
+                />
               </div>
 
-              {config.imageGen.provider === 'comfyui' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
-                  <input
-                    type="text"
-                    value={config.imageGen.endpoint}
-                    placeholder="https://your-comfyui-endpoint.com/api"
-                    onChange={(e) => dispatch(setImageGenConfig({ endpoint: e.target.value }))}
-                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Height</label>
+                <input
+                  type="number"
+                  min="256"
+                  step="64"
+                  value={config.imageGen.height ?? 720}
+                  onChange={(e) => {
+                    const height = Number.parseInt(e.target.value, 10);
+                    dispatch(setImageGenConfig({ height: Number.isNaN(height) ? 720 : height }));
+                  }}
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">CFG</label>
                 <input
-                  type="password"
-                  value={config.imageGen.apiKey}
-                  placeholder={config.imageGen.provider === 'gemini' ? 'Enter your Gemini API key' : 'Enter your ComfyUI API token'}
-                  onChange={(e) => dispatch(setImageGenConfig({ apiKey: e.target.value }))}
+                  type="number"
+                  min="1"
+                  max="20"
+                  step="0.5"
+                  value={config.imageGen.cfg ?? 7}
+                  onChange={(e) => {
+                    const cfg = Number.parseFloat(e.target.value);
+                    dispatch(setImageGenConfig({ cfg: Number.isNaN(cfg) ? 7 : cfg }));
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
               </div>

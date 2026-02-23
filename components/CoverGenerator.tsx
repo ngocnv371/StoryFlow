@@ -13,7 +13,7 @@ interface CoverGeneratorProps {
 
 const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const config = useSelector((state: RootState) => state.config.imageGen);
+  const config = useSelector((state: RootState) => state.config);
   const status = useSelector((state: RootState) => state.stories.imageGenerationStatuses[story.id] || 'idle');
   const [showTooltip, setShowTooltip] = useState(false);
 

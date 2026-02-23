@@ -14,7 +14,7 @@ interface TranscriptGeneratorProps {
 
 const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGenerated }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const config = useSelector((state: RootState) => state.config.textGen);
+  const config = useSelector((state: RootState) => state.config);
   const status = useSelector((state: RootState) => state.stories.transcriptGenerationStatuses[story.id] || 'idle');
 
   const handleGenerate = async () => {

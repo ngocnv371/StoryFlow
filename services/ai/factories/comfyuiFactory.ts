@@ -1,15 +1,15 @@
-import { AudioGenConfig, ImageGenConfig, TextGenConfig, Story } from '../../../types';
+import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedStoryText } from '../types';
 
 export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
-  async generateText(_config: TextGenConfig, _storyDetails: Story): Promise<GeneratedStoryText> {
+  async generateText(_config: AppConfig, _storyDetails: Story): Promise<GeneratedStoryText> {
     throw new Error('ComfyUI provider does not support text generation. Use Gemini provider for text.');
   }
 
-  async generateImage(config: ImageGenConfig, story: Story): Promise<string> {
-    if (!config.endpoint) {
+  async generateImage(config: AppConfig, story: Story): Promise<string> {
+    if (!config.comfy.endpoint) {
       throw new Error('ComfyUI endpoint is required for image generation.');
     }
 
@@ -17,18 +17,22 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
       'Content-Type': 'application/json',
     };
 
-    if (config.apiKey) {
-      headers.Authorization = `Bearer ${config.apiKey}`;
+    if (config.comfy.apiKey) {
+      headers.Authorization = `Bearer ${config.comfy.apiKey}`;
     }
 
     try {
-      const response = await fetch(config.endpoint, {
+      const response = await fetch(config.comfy.endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({
           prompt: constructImagePrompt(story),
           storyId: story.id,
-          aspectRatio: '16:9'
+          aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
+          width: config.imageGen.width,
+          height: config.imageGen.height,
+          cfg: config.imageGen.cfg,
+          model: config.comfy.model,
         }),
       });
 
@@ -54,7 +58,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
-  async generateAudio(_config: AudioGenConfig, _story: Story): Promise<string> {
+  async generateAudio(_config: AppConfig, _story: Story): Promise<string> {
     throw new Error('ComfyUI provider does not support audio generation. Use Gemini provider for audio.');
   }
 }

@@ -1,18 +1,18 @@
 import { GoogleGenAI, Modality } from '@google/genai';
-import { AudioGenConfig, ImageGenConfig, TextGenConfig, Story } from '../../../types';
+import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
 import { buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedStoryText } from '../types';
 
 export class GeminiAIGenerationFactory implements AIGenerationFactory {
-  async generateText(config: TextGenConfig, storyDetails: Story): Promise<GeneratedStoryText> {
-    const apiKey = config.apiKey || process.env.API_KEY || '';
+  async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
+    const apiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey });
 
     try {
       const response = await ai.models.generateContent({
-        model: config.model || 'gemini-3-flash-preview',
+        model: config.gemini.textModel || 'gemini-3-flash-preview',
         contents: buildTranscriptPrompt(storyDetails),
       });
 
@@ -49,15 +49,18 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
-  async generateImage(config: ImageGenConfig, story: Story): Promise<string> {
-    const finalApiKey = config.apiKey || process.env.API_KEY || '';
+  async generateImage(config: AppConfig, story: Story): Promise<string> {
+    const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
+    const requestedAspectRatio = config.imageGen.width && config.imageGen.height
+      ? `${config.imageGen.width}:${config.imageGen.height}`
+      : '16:9';
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: config.gemini.imageModel || 'gemini-2.5-flash-image',
         contents: { parts: [{ text: constructImagePrompt(story) }] },
-        config: { imageConfig: { aspectRatio: '16:9' } }
+        config: { imageConfig: { aspectRatio: requestedAspectRatio } }
       });
 
       let base64 = '';
@@ -80,18 +83,20 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
-  async generateAudio(config: AudioGenConfig, story: Story): Promise<string> {
-    const finalApiKey = config.apiKey || process.env.API_KEY || '';
+  async generateAudio(config: AppConfig, story: Story): Promise<string> {
+    const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
+    const speed = config.audioGen.speed ?? 1;
+    const voice = config.audioGen.voice || 'Kore';
 
     try {
       const response = await ai.models.generateContent({
-        model: config.model || 'gemini-2.5-flash-preview-tts',
-        contents: [{ parts: [{ text: `Say naturally and cinematically: ${story.transcript.substring(0, 1500)}` }] }],
+        model: config.gemini.audioModel || 'gemini-2.5-flash-preview-tts',
+        contents: [{ parts: [{ text: `Say naturally and cinematically at ${speed}x speed: ${story.transcript.substring(0, 1500)}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
           },
         },
       });

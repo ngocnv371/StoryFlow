@@ -13,7 +13,7 @@ interface AudioGeneratorProps {
 
 const AudioGenerator: React.FC<AudioGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const config = useSelector((state: RootState) => state.config.audioGen);
+  const config = useSelector((state: RootState) => state.config);
   const status = useSelector((state: RootState) => state.stories.audioGenerationStatuses[story.id] || 'idle');
 
   const handleGenerate = async () => {

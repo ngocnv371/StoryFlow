@@ -1,25 +1,30 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, TextGenConfig, AudioGenConfig, ImageGenConfig } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
 const defaultState: AppConfig = {
-  textGen: {
-    provider: 'gemini',
+  provider: 'gemini',
+  gemini: {
     apiKey: '',
-    model: 'gemini-3-flash-preview',
+    textModel: 'gemini-3-flash-preview',
+    audioModel: 'gemini-2.5-flash-preview-tts',
+    imageModel: 'gemini-2.5-flash-image',
+  },
+  comfy: {
+    apiKey: '',
     endpoint: '',
+    model: '',
   },
   audioGen: {
-    provider: 'gemini',
-    apiKey: '',
-    model: 'gemini-2.5-flash-preview-tts',
+    voice: 'Kore',
+    speed: 1,
   },
   imageGen: {
-    provider: 'gemini',
-    apiKey: '',
-    endpoint: '',
+    width: 1280,
+    height: 720,
+    cfg: 7,
   },
 };
 
@@ -31,7 +36,22 @@ const loadConfigFromStorage = (): AppConfig => {
       const parsed = JSON.parse(stored);
       // Merge with defaults to ensure all fields exist
       return {
-        textGen: { ...defaultState.textGen, ...parsed.textGen },
+        provider: parsed.provider ?? parsed.imageGen?.provider ?? defaultState.provider,
+        gemini: {
+          ...defaultState.gemini,
+          ...parsed.gemini,
+          apiKey: parsed.gemini?.apiKey ?? parsed.textGen?.apiKey ?? parsed.audioGen?.apiKey ?? parsed.imageGen?.apiKey ?? defaultState.gemini.apiKey,
+          textModel: parsed.gemini?.textModel ?? parsed.textGen?.model ?? defaultState.gemini.textModel,
+          audioModel: parsed.gemini?.audioModel ?? parsed.audioGen?.model ?? defaultState.gemini.audioModel,
+          imageModel: parsed.gemini?.imageModel ?? parsed.imageGen?.model ?? defaultState.gemini.imageModel,
+        },
+        comfy: {
+          ...defaultState.comfy,
+          ...parsed.comfy,
+          apiKey: parsed.comfy?.apiKey ?? parsed.imageGen?.apiKey ?? defaultState.comfy.apiKey,
+          endpoint: parsed.comfy?.endpoint ?? parsed.imageGen?.endpoint ?? defaultState.comfy.endpoint,
+          model: parsed.comfy?.model ?? defaultState.comfy.model,
+        },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
         imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
       };
@@ -57,8 +77,14 @@ const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    setTextGenConfig: (state, action: PayloadAction<Partial<TextGenConfig>>) => {
-      state.textGen = { ...state.textGen, ...action.payload };
+    setProvider: (state, action: PayloadAction<AIProvider>) => {
+      state.provider = action.payload;
+    },
+    setGeminiConfig: (state, action: PayloadAction<Partial<GeminiConfig>>) => {
+      state.gemini = { ...state.gemini, ...action.payload };
+    },
+    setComfyConfig: (state, action: PayloadAction<Partial<ComfyConfig>>) => {
+      state.comfy = { ...state.comfy, ...action.payload };
     },
     setAudioGenConfig: (state, action: PayloadAction<Partial<AudioGenConfig>>) => {
       state.audioGen = { ...state.audioGen, ...action.payload };
@@ -69,5 +95,5 @@ const configSlice = createSlice({
   },
 });
 
-export const { setTextGenConfig, setAudioGenConfig, setImageGenConfig } = configSlice.actions;
+export const { setProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig } = configSlice.actions;
 export default configSlice.reducer;

@@ -15,106 +15,30 @@ export interface Story {
   video_url?: string;
 }
 
-export type TextGenProvider = 'gemini' | 'openai';
-export type AudioGenProvider = 'gemini' | 'elevenlabs' | 'whisper';
-export type ImageGenProvider = 'gemini' | 'comfyui';
+export type AIProvider = 'gemini' | 'comfyui';
 
-// VideoEncoder API types (for browsers that support it)
-declare global {
-  interface VideoEncoder {
-    new(init: VideoEncoderInit): VideoEncoder;
-    configure(config: VideoEncoderConfig): void;
-    encode(frame: VideoFrame, options?: VideoEncoderEncodeOptions): void;
-    flush(): Promise<void>;
-    close(): void;
-    readonly encodeQueueSize: number;
-    readonly state: CodecState;
-    static isConfigSupported(config: VideoEncoderConfig): Promise<VideoEncoderSupport>;
-  }
-
-  interface VideoEncoderInit {
-    output: (chunk: EncodedVideoChunk) => void;
-    error: (error: Error) => void;
-  }
-
-  interface VideoEncoderConfig {
-    codec: string;
-    width: number;
-    height: number;
-    bitrate?: number;
-    framerate?: number;
-    keyFrameInterval?: number;
-  }
-
-  interface VideoEncoderEncodeOptions {
-    keyFrame?: boolean;
-  }
-
-  interface VideoEncoderSupport {
-    supported: boolean;
-    config?: VideoEncoderConfig;
-  }
-
-  interface VideoFrame {
-    new(source: CanvasImageSource, init?: VideoFrameInit): VideoFrame;
-    readonly timestamp: number;
-    readonly duration?: number;
-    close(): void;
-  }
-
-  interface VideoFrameInit {
-    timestamp: number;
-    duration?: number;
-  }
-
-  interface EncodedVideoChunk {
-    readonly type: 'key' | 'delta';
-    readonly timestamp: number;
-    readonly duration?: number;
-    readonly byteLength: number;
-    copyTo(destination: ArrayBufferView): void;
-  }
-
-  interface EncodedVideoChunk {
-    readonly type: 'key' | 'delta';
-    readonly timestamp: number;
-    readonly duration?: number;
-    readonly byteLength: number;
-    copyTo(destination: ArrayBufferView): void;
-  }
-
-  type CodecState = 'unconfigured' | 'configured' | 'closed';
-
-  const VideoEncoder: {
-    prototype: VideoEncoder;
-    new(init: VideoEncoderInit): VideoEncoder;
-    isConfigSupported(config: VideoEncoderConfig): Promise<VideoEncoderSupport>;
-  };
-
-  const VideoFrame: {
-    prototype: VideoFrame;
-    new(source: CanvasImageSource, init?: VideoFrameInit): VideoFrame;
-  };
+export interface GeminiConfig {
+  apiKey: string;
+  textModel: string;
+  audioModel: string;
+  imageModel: string;
 }
 
-export interface TextGenConfig {
-  provider: TextGenProvider;
+export interface ComfyConfig {
   apiKey: string;
-  model: string;
   endpoint?: string;
+  model?: string;
 }
 
 export interface AudioGenConfig {
-  provider: AudioGenProvider;
-  apiKey: string;
-  model?: string;
-  endpoint?: string;
+  voice?: string;
+  speed?: number;
 }
 
 export interface ImageGenConfig {
-  provider: ImageGenProvider;
-  apiKey: string;
-  endpoint?: string;
+  width?: number;
+  height?: number;
+  cfg?: number;
 }
 
 export interface User {
@@ -124,7 +48,9 @@ export interface User {
 }
 
 export interface AppConfig {
-  textGen: TextGenConfig;
+  provider: AIProvider;
+  gemini: GeminiConfig;
+  comfy: ComfyConfig;
   audioGen: AudioGenConfig;
   imageGen: ImageGenConfig;
 }
