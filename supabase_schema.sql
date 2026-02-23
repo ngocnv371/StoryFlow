@@ -14,6 +14,7 @@ CREATE TABLE public.stories (
   summary TEXT,
   tags TEXT[] DEFAULT '{}',
   transcript TEXT DEFAULT '',
+  cover_prompt TEXT,
   narrator TEXT,
   music TEXT,
   status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed')),

@@ -31,6 +31,7 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
           transcript: parsed.transcript || 'Failed to generate transcript.',
           narrator: parsed.narrator || 'Neutral narrator voice',
           music: parsed.music || 'Ambient background music',
+          cover_prompt: parsed.cover_prompt || undefined,
           tags: Array.isArray(parsed.tags) ? parsed.tags : []
         };
       } catch {
@@ -40,6 +41,7 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
           transcript: cleanedText,
           narrator: 'Neutral narrator voice',
           music: 'Ambient background music',
+          cover_prompt: undefined,
           tags: []
         };
       }

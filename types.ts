@@ -6,6 +6,7 @@ export interface Story {
   summary: string;
   tags: string[];
   transcript: string;
+  cover_prompt?: string;
   narrator?: string;
   music?: string;
   status: 'Draft' | 'Pending' | 'Completed';

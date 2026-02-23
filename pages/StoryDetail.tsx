@@ -136,6 +136,16 @@ const StoryDetail: React.FC = () => {
                 placeholder="e.g., Calm piano, Epic orchestral..."
               />
             </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cover Prompt</label>
+              <input 
+                value={formData.cover_prompt || ''} 
+                onChange={e => setFormData({...formData, cover_prompt: e.target.value})} 
+                className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                placeholder="A concise but vivid image-generation prompt for the story cover art"
+              />
+            </div>
           </div>
           <div className="bg-white rounded-2xl border shadow-sm h-[700px] flex flex-col overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
@@ -145,7 +155,7 @@ const StoryDetail: React.FC = () => {
               </div>
               <TranscriptGenerator 
                 story={formData} 
-                onGenerated={(data) => setFormData(prev => prev ? ({ ...prev, transcript: data.transcript, narrator: data.narrator, music: data.music, tags: data.tags }) : null)} 
+                onGenerated={(data) => setFormData(prev => prev ? ({ ...prev, transcript: data.transcript, narrator: data.narrator, music: data.music, cover_prompt: data.cover_prompt, tags: data.tags }) : null)} 
               />
             </div>
             <textarea 

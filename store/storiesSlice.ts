@@ -52,6 +52,7 @@ export const updateStoryRemote = createAsyncThunk('stories/update', async (story
       audio_url: story.audio_url,
       video_url: story.video_url,
       narrator: story.narrator,
+      cover_prompt: story.cover_prompt,
       music: story.music
     })
     .eq('id', story.id)

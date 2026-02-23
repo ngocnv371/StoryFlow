@@ -2,7 +2,7 @@ import { AppConfig, Story } from '../../types';
 
 export type AIProviderFactoryType = 'gemini' | 'comfyui';
 
-export type GeneratedStoryText = Pick<Story, 'title' | 'transcript' | 'narrator' | 'music' | 'tags'>;
+export type GeneratedStoryText = Pick<Story, 'title' | 'transcript' | 'narrator' | 'music' | 'cover_prompt' | 'tags'>;
 
 export interface AIGenerationFactory {
   generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText>;
