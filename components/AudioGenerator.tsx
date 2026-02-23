@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { setAudioGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
-import { generateAudioSpeech } from '../services/geminiService';
+import { generateAudioSpeech } from '../services/aiService';
 import { Story } from '../types';
 
 interface AudioGeneratorProps {
@@ -28,7 +28,7 @@ const AudioGenerator: React.FC<AudioGeneratorProps> = ({ story }) => {
 
     dispatch(setAudioGenStatus({ id: story.id, status: 'generating' }));
     try {
-      const audioUrl = await generateAudioSpeech(config.apiKey, story);
+      const audioUrl = await generateAudioSpeech(config, story);
       await dispatch(updateStoryRemote({ ...story, audio_url: audioUrl }));
       dispatch(setAudioGenStatus({ id: story.id, status: 'idle' }));
       dispatch(showAlert({

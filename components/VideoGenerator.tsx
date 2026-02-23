@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from '../store';
 import { setVideoGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
-import { uploadVideoToSupabase } from '../services/geminiService';
+import { uploadVideoToSupabase } from '../services/aiService';
 import { Story } from '../types';
 import { downloadVideo } from '@/services/util';
 

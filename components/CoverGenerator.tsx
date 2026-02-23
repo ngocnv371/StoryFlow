@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setImageGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
-import { generateCoverImage, constructImagePrompt } from '../services/geminiService';
+import { generateCoverImage, constructImagePrompt } from '../services/aiService';
 import { Story } from '../types';
 
 interface CoverGeneratorProps {
@@ -13,7 +13,7 @@ interface CoverGeneratorProps {
 
 const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const config = useSelector((state: RootState) => state.config.textGen);
+  const config = useSelector((state: RootState) => state.config.imageGen);
   const status = useSelector((state: RootState) => state.stories.imageGenerationStatuses[story.id] || 'idle');
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -22,7 +22,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
   const handleGenerate = async () => {
     dispatch(setImageGenStatus({ id: story.id, status: 'generating' }));
     try {
-      const imageUrl = await generateCoverImage(config.apiKey, story);
+      const imageUrl = await generateCoverImage(config, story);
       await dispatch(updateStoryRemote({ ...story, thumbnail_url: imageUrl }));
       dispatch(setImageGenStatus({ id: story.id, status: 'idle' }));
     } catch (error: any) {

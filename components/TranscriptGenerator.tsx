@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setTranscriptGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
-import { generateStoryTranscript } from '../services/geminiService';
+import { generateStoryTranscript } from '../services/aiService';
 import { Story } from '../types';
 
 interface TranscriptGeneratorProps {
