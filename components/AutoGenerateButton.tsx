@@ -4,19 +4,21 @@ import { RootState, AppDispatch } from '../store';
 import {
   setAudioGenStatus,
   setImageGenStatus,
+  setMusicGenStatus,
   setTranscriptGenStatus,
   setVideoGenStatus,
   updateStoryRemote,
 } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
 import { Story } from '../types';
-import { generateAudioSpeech, generateCoverImage, generateStoryTranscript, uploadVideoToSupabase } from '../services/aiService';
+import { generateAudioSpeech, generateBackgroundMusic, generateCoverImage, generateStoryTranscript, uploadVideoToSupabase } from '../services/aiService';
 import { compileStoryVideo } from '../services/encoder-webm';
 
 interface AutoGenerationOptions {
   transcript: boolean;
   cover: boolean;
   audio: boolean;
+  music: boolean;
   video: boolean;
 }
 
@@ -24,6 +26,7 @@ const DEFAULT_AUTO_GENERATION_OPTIONS: AutoGenerationOptions = {
   transcript: true,
   cover: true,
   audio: true,
+  music: true,
   video: true,
 };
 
@@ -112,6 +115,26 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         dispatch(setAudioGenStatus({ id: nextStory.id, status: 'idle' }));
       }
 
+      const shouldGenerateMusic = autoGenerationOptions.music || !nextStory.music_url?.trim();
+      if (shouldGenerateMusic) {
+        currentStage = 'music';
+        if (!nextStory.music?.trim()) {
+          throw new Error('Please provide a music description before generating background music.');
+        }
+        if (!config.comfy.endpoint?.trim()) {
+          throw new Error('Set a ComfyUI endpoint in Settings to generate background music.');
+        }
+
+        setAutoGeneratingStep('Generating music...');
+        dispatch(setMusicGenStatus({ id: nextStory.id, status: 'generating' }));
+
+        const musicUrl = await generateBackgroundMusic(config, nextStory);
+        nextStory = { ...nextStory, music_url: musicUrl };
+        await updateStoryLocallyAndRemotely(nextStory);
+
+        dispatch(setMusicGenStatus({ id: nextStory.id, status: 'idle' }));
+      }
+
       const shouldGenerateVideo = autoGenerationOptions.video || !nextStory.video_url?.trim();
       if (shouldGenerateVideo) {
         currentStage = 'video';
@@ -149,6 +172,9 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
       }
       if (currentStage === 'audio') {
         dispatch(setAudioGenStatus({ id: nextStory.id, status: 'error' }));
+      }
+      if (currentStage === 'music') {
+        dispatch(setMusicGenStatus({ id: nextStory.id, status: 'error' }));
       }
       if (currentStage === 'video') {
         dispatch(setVideoGenStatus({ id: nextStory.id, status: 'error' }));
@@ -226,6 +252,16 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
                   className="w-4 h-4"
                 />
                 <span className="font-medium text-slate-700">Audio</span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={autoGenerationOptions.music}
+                  onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, music: e.target.checked }))}
+                  className="w-4 h-4"
+                />
+                <span className="font-medium text-slate-700">Music</span>
               </label>
 
               <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
