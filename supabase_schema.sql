@@ -20,6 +20,7 @@ CREATE TABLE public.stories (
   status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed')),
   thumbnail_url TEXT,
   audio_url TEXT,
+  music_url TEXT,
   video_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -66,7 +67,7 @@ CREATE TRIGGER on_auth_user_created
 
 -- Create buckets if they don't exist
 INSERT INTO storage.buckets (id, name, public) 
-VALUES ('thumbnails', 'thumbnails', true), ('audio', 'audio', true), ('videos', 'videos', true)
+VALUES ('thumbnails', 'thumbnails', true), ('audio', 'audio', true), ('music', 'music', true), ('videos', 'videos', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Enable RLS on storage objects (usually enabled by default in Supabase)
@@ -105,6 +106,23 @@ USING (bucket_id = 'audio' AND auth.role() = 'authenticated');
 CREATE POLICY "Authenticated Delete Access for Audio"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'audio' AND auth.role() = 'authenticated');
+
+-- Music Policies
+CREATE POLICY "Public Read Access for Music"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'music');
+
+CREATE POLICY "Authenticated Upload Access for Music"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'music' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated Update Access for Music"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'music' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated Delete Access for Music"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'music' AND auth.role() = 'authenticated');
 
 -- Video Policies
 CREATE POLICY "Public Read Access for Video"

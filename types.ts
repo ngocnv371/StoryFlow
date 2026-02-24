@@ -13,6 +13,7 @@ export interface Story {
   created_at: string;
   thumbnail_url: string;
   audio_url?: string;
+  music_url?: string;
   video_url?: string;
 }
 
