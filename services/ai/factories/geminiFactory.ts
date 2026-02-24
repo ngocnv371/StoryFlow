@@ -122,4 +122,8 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       throw new Error(error.message || 'Audio generation failed.');
     }
   }
+
+  async generateMusic(_config: AppConfig, _story: Story): Promise<string> {
+    throw new Error('Gemini provider does not support background music generation. Use ComfyUI provider for music.');
+  }
 }

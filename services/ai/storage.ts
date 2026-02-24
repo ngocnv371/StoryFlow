@@ -1,7 +1,7 @@
 import { supabase } from '../../supabaseClient';
 
 export const uploadToSupabase = async (bucket: string, fileName: string, data: Blob | Uint8Array, mimeType: string) => {
-  const fileBody = data instanceof Uint8Array ? new Blob([data], { type: mimeType }) : data;
+  const fileBody = data instanceof Uint8Array ? new Blob([Uint8Array.from(data)], { type: mimeType }) : data;
 
   const { data: uploadData, error } = await supabase.storage
     .from(bucket)

@@ -1,9 +1,10 @@
 import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
-import { uploadBase64ToSupabase } from '../storage';
+import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedStoryText } from '../types';
 import comfyZImageWorkflow from './comfy-zimage.json';
 import comfySD35Workflow from './comfy-image-sd35.json';
+import comfyMusicWorkflow from './comfy-music.json';
 
 const COMFY_POLL_INTERVAL_MS = 1500;
 const COMFY_MAX_POLL_ATTEMPTS = 80;
@@ -58,6 +59,41 @@ function extractImageUrlFromComfyOutputs(outputs: unknown, endpoint: string): st
   return null;
 }
 
+function extractAudioUrlFromComfyOutputs(outputs: unknown, endpoint: string): string | null {
+  if (!outputs || typeof outputs !== 'object') {
+    return null;
+  }
+
+  for (const nodeOutput of Object.values(outputs as Record<string, any>)) {
+    const audioArray = Array.isArray(nodeOutput?.audio) ? nodeOutput.audio : [];
+    for (const audio of audioArray) {
+      const directUrl = asNonEmptyString(audio?.url);
+      if (directUrl) {
+        return directUrl;
+      }
+
+      const filename = asNonEmptyString(audio?.filename);
+      if (filename) {
+        const viewUrl = new URL(buildSiblingPathUrl(endpoint, 'view'));
+        viewUrl.searchParams.set('filename', filename);
+        viewUrl.searchParams.set('subfolder', asNonEmptyString(audio?.subfolder) ?? 'audio');
+        viewUrl.searchParams.set('type', asNonEmptyString(audio?.type) ?? 'output');
+        return viewUrl.toString();
+      }
+    }
+
+    const audioUi = asNonEmptyString(nodeOutput?.audioUI);
+    if (audioUi) {
+      if (audioUi.startsWith('http://') || audioUi.startsWith('https://')) {
+        return audioUi;
+      }
+      return new URL(audioUi, endpoint).toString();
+    }
+  }
+
+  return null;
+}
+
 async function extractImageResult(
   data: any,
   endpoint: string,
@@ -86,6 +122,43 @@ async function extractImageResult(
     extractImageUrlFromComfyOutputs(historyEntry?.outputs, endpoint);
   if (outputUrl) {
     return outputUrl;
+  }
+
+  return null;
+}
+
+async function extractMusicResult(
+  data: any,
+  endpoint: string,
+  storyId: string,
+  promptId?: string,
+): Promise<string | null> {
+  const directUrl =
+    asNonEmptyString(data?.audioUrl) ||
+    asNonEmptyString(data?.url) ||
+    asNonEmptyString(data?.audios?.[0]?.url);
+  if (directUrl) {
+    return directUrl;
+  }
+
+  const historyEntry = promptId ? data?.[promptId] : null;
+  const outputUrl =
+    extractAudioUrlFromComfyOutputs(data?.outputs, endpoint) ||
+    extractAudioUrlFromComfyOutputs(historyEntry?.outputs, endpoint);
+  if (outputUrl) {
+    try {
+      const response = await fetch(outputUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch generated music (${response.status}).`);
+      }
+
+      const blob = await response.blob();
+      const contentType = blob.type || 'audio/mpeg';
+      const extension = contentType.includes('wav') ? 'wav' : 'mp3';
+      return await uploadToSupabase('music', `${storyId}.${extension}`, blob, contentType);
+    } catch {
+      return outputUrl;
+    }
   }
 
   return null;
@@ -182,6 +255,77 @@ async function pollForComfyImage(
   throw new Error(`Timed out waiting for ComfyUI image result for prompt_id ${promptId}.`);
 }
 
+async function pollForComfyMusic(
+  endpoint: string,
+  headers: Record<string, string>,
+  promptId: string,
+  storyId: string,
+): Promise<string> {
+  const authHeaders: Record<string, string> = {};
+  if (headers.Authorization) {
+    authHeaders.Authorization = headers.Authorization;
+  }
+
+  const historyByIdUrl = buildSiblingPathUrl(endpoint, 'history', encodeURIComponent(promptId));
+  const historyQueryUrl = new URL(buildSiblingPathUrl(endpoint, 'history'));
+  historyQueryUrl.searchParams.set('prompt_id', promptId);
+
+  const endpointQueryUrl = new URL(endpoint);
+  endpointQueryUrl.searchParams.set('prompt_id', promptId);
+  const pollUrls = [historyByIdUrl, historyQueryUrl.toString(), endpointQueryUrl.toString()];
+
+  for (let attempt = 0; attempt < COMFY_MAX_POLL_ATTEMPTS; attempt += 1) {
+    let lastPingError: string | null = null;
+
+    for (const pollUrl of pollUrls) {
+      try {
+        const response = await fetch(pollUrl, {
+          method: 'GET',
+          headers: authHeaders,
+        });
+
+        if (!response.ok) {
+          let details = '';
+          try {
+            const body = await response.text();
+            details = body ? ` - ${body}` : '';
+          } catch {
+          }
+          lastPingError = `Ping request failed (${response.status}) at ${pollUrl}${details}`;
+          continue;
+        }
+
+        const data = await response.json();
+        const music = await extractMusicResult(data, endpoint, storyId, promptId);
+        if (music) {
+          return music;
+        }
+
+        if (hasFailedStatus(data, promptId)) {
+          throw new Error(`ComfyUI music generation failed for prompt_id ${promptId}.`);
+        }
+
+        lastPingError = null;
+        break;
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('generation failed')) {
+          throw error;
+        }
+
+        lastPingError = error instanceof Error ? `Ping request failed at ${pollUrl}: ${error.message}` : `Ping request failed at ${pollUrl}.`;
+      }
+    }
+
+    if (lastPingError) {
+      throw new Error(`ComfyUI ping failed for prompt_id ${promptId}. ${lastPingError}`);
+    }
+
+    await sleep(COMFY_POLL_INTERVAL_MS);
+  }
+
+  throw new Error(`Timed out waiting for ComfyUI music result for prompt_id ${promptId}.`);
+}
+
 function createZImageWorkflow(story: Story, config: AppConfig) {
   const prompt = constructImagePrompt(story);
 
@@ -201,6 +345,14 @@ function createSD35ImageWorkflow(story: Story, config: AppConfig) {
   workflow["6"].inputs.text = prompt;
   workflow["5"].inputs.width = config.imageGen.width || 512;
   workflow["5"].inputs.height = config.imageGen.height || 512;
+  return workflow;
+}
+
+function createMusicWorkflow(story: Story): Record<string, any> {
+  const workflow = JSON.parse(JSON.stringify(comfyMusicWorkflow));
+  const musicPrompt = story.music?.trim() || `Cinematic ambient score inspired by: ${story.title}. ${story.summary}`;
+  workflow['94'].inputs.tags = musicPrompt;
+  workflow['98'].inputs.seconds = 90; // TODO: calculate based on 'audio_url'
   return workflow;
 }
 
@@ -261,5 +413,51 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
 
   async generateAudio(_config: AppConfig, _story: Story): Promise<string> {
     throw new Error('ComfyUI provider does not support audio generation. Use Gemini provider for audio.');
+  }
+
+  async generateMusic(config: AppConfig, story: Story): Promise<string> {
+    if (!config.comfy.endpoint) {
+      throw new Error('ComfyUI endpoint is required for music generation.');
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (config.comfy.apiKey) {
+      headers.Authorization = `Bearer ${config.comfy.apiKey}`;
+    }
+
+    try {
+      const response = await fetch(config.comfy.endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          prompt: createMusicWorkflow(story),
+          storyId: story.id,
+          model: config.comfy.model,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`ComfyUI request failed (${response.status}): ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const immediateResult = await extractMusicResult(data, config.comfy.endpoint, story.id);
+      if (immediateResult) {
+        return immediateResult;
+      }
+
+      const promptId = getPromptId(data);
+      if (promptId) {
+        return await pollForComfyMusic(config.comfy.endpoint, headers, promptId, story.id);
+      }
+
+      throw new Error('ComfyUI response did not include music data or prompt_id for polling.');
+    } catch (error: any) {
+      console.error('ComfyUI music generation error details:', error);
+      throw new Error(error.message || 'ComfyUI music generation failed.');
+    }
   }
 }

@@ -7,10 +7,12 @@ import { updateStoryRemote } from '../store/storiesSlice';
 import { Story } from '../types';
 import CoverGenerator from '../components/CoverGenerator';
 import AudioGenerator from '../components/AudioGenerator';
+import BackgroundMusicGenerator from '../components/BackgroundMusicGenerator';
 import VideoGenerator from '../components/VideoGenerator';
 import TranscriptGenerator from '../components/TranscriptGenerator';
 import ImageInspector from '../components/ImageInspector';
 import TagEditor from '../components/TagEditor';
+import AutoGenerateButton from '../components/AutoGenerateButton';
 
 const StoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +45,7 @@ const StoryDetail: React.FC = () => {
           Back
         </button>
         <div className="flex items-center gap-4">
+          <AutoGenerateButton story={formData} onStoryUpdated={setFormData} />
           <span className={`text-sm text-emerald-600 font-medium transition-opacity ${saveStatus === 'saved' ? 'opacity-100' : 'opacity-0'}`}>Saved!</span>
           <button onClick={handleSave} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg">Save</button>
         </div>
@@ -62,12 +65,20 @@ const StoryDetail: React.FC = () => {
             
             <CoverGenerator story={formData} />
             <AudioGenerator story={formData} />
+            <BackgroundMusicGenerator story={formData} />
             <VideoGenerator story={formData} />
 
             {formData.audio_url && (
               <div className="p-4 bg-slate-50 rounded-xl space-y-2 border">
                 <p className="text-xs font-bold text-slate-400 uppercase">Current Narration</p>
                 <audio controls className="w-full h-10" src={formData.audio_url}></audio>
+              </div>
+            )}
+
+            {formData.music_url && (
+              <div className="p-4 bg-slate-50 rounded-xl space-y-2 border">
+                <p className="text-xs font-bold text-slate-400 uppercase">Current Background Music</p>
+                <audio controls className="w-full h-10" src={formData.music_url}></audio>
               </div>
             )}
 

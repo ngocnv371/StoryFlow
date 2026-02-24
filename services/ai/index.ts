@@ -27,6 +27,11 @@ export const generateAudioSpeech = async (config: AppConfig, story: Story): Prom
   return await factory.generateAudio(config, story);
 };
 
+export const generateBackgroundMusic = async (config: AppConfig, story: Story): Promise<string> => {
+  const factory = createAIGenerationFactory('comfyui');
+  return await factory.generateMusic(config, story);
+};
+
 export const generateStoryTranscript = async (
   config: AppConfig,
   storyDetails: Story

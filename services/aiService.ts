@@ -1,6 +1,7 @@
 export {
   constructImagePrompt,
   createAIGenerationFactory,
+  generateBackgroundMusic,
   generateAudioSpeech,
   generateCoverImage,
   generateStoryTranscript,

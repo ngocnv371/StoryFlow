@@ -9,6 +9,7 @@ interface StoriesState {
   error: string | null;
   imageGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   audioGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
+  musicGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   transcriptGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
   videoGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
 }
@@ -68,6 +69,7 @@ const initialState: StoriesState = {
   error: null,
   imageGenerationStatuses: {},
   audioGenerationStatuses: {},
+  musicGenerationStatuses: {},
   transcriptGenerationStatuses: {},
   videoGenerationStatuses: {},
 };
@@ -81,6 +83,9 @@ const storiesSlice = createSlice({
     },
     setAudioGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
       state.audioGenerationStatuses[action.payload.id] = action.payload.status;
+    },
+    setMusicGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
+      state.musicGenerationStatuses[action.payload.id] = action.payload.status;
     },
     setTranscriptGenStatus: (state, action: PayloadAction<{ id: string; status: 'idle' | 'generating' | 'error' }>) => {
       state.transcriptGenerationStatuses[action.payload.id] = action.payload.status;
@@ -110,5 +115,5 @@ const storiesSlice = createSlice({
   }
 });
 
-export const { setImageGenStatus, setAudioGenStatus, setTranscriptGenStatus, setVideoGenStatus } = storiesSlice.actions;
+export const { setImageGenStatus, setAudioGenStatus, setMusicGenStatus, setTranscriptGenStatus, setVideoGenStatus } = storiesSlice.actions;
 export default storiesSlice.reducer;
