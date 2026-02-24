@@ -12,6 +12,7 @@ CREATE TABLE public.stories (
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   summary TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
   tags TEXT[] DEFAULT '{}',
   transcript TEXT DEFAULT '',
   cover_prompt TEXT,

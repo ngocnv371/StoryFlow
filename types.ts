@@ -4,6 +4,7 @@ export interface Story {
   user_id: string;
   title: string;
   summary: string;
+  metadata?: Record<string, unknown>;
   tags: string[];
   transcript: string;
   cover_prompt?: string;
