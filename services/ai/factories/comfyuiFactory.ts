@@ -379,7 +379,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          prompt: createZImageWorkflow(story, config),
+          prompt: createSD35ImageWorkflow(story, config),
           storyId: story.id,
           aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
           width: config.imageGen.width,

@@ -85,6 +85,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       const compiledVideoBlob = await compileStoryVideo(
         story.thumbnail_url,
         story.audio_url,
+        story.music_url,
         (progressValue) => setProgress(Math.round(progressValue * 100))
       );
       

@@ -76,21 +76,36 @@ async function loadAndDecodeAudio(audioUrl: string): Promise<AudioBuffer> {
 export async function compileStoryVideo(
   coverImageUrl: string, 
   audioUrl: string,
-  onProgress?: (progress: number) => void
+  backgroundMusicUrlOrProgress?: string | ((progress: number) => void),
+  onProgressMaybe?: (progress: number) => void
 ): Promise<Blob> {
+  const backgroundMusicUrl = typeof backgroundMusicUrlOrProgress === 'string'
+    ? backgroundMusicUrlOrProgress
+    : undefined;
+  const onProgress = typeof backgroundMusicUrlOrProgress === 'function'
+    ? backgroundMusicUrlOrProgress
+    : onProgressMaybe;
   
   console.log('🚀 Starting video compilation...');
   console.log(`📄 Cover image URL: ${coverImageUrl}`);
   console.log(`🎵 Audio URL: ${audioUrl}`);
+  if (backgroundMusicUrl) {
+    console.log(`🎶 Background music URL: ${backgroundMusicUrl}`);
+  }
 
   try {
     // Load the cover image and audio in parallel
-    const [coverImage, audioBuffer] = await Promise.all([
+    const [coverImage, audioBuffer, backgroundMusicBuffer] = await Promise.all([
       loadImage(coverImageUrl),
-      loadAndDecodeAudio(audioUrl)
+      loadAndDecodeAudio(audioUrl),
+      backgroundMusicUrl ? loadAndDecodeAudio(backgroundMusicUrl) : Promise.resolve(null),
     ]);
 
     const duration = audioBuffer.duration;
+    const mixedAudioBuffer = backgroundMusicBuffer
+      ? await mixNarrationWithBackgroundMusic(audioBuffer, backgroundMusicBuffer, DEFAULT_CONFIG.audioSampleRate)
+      : audioBuffer;
+
     const totalFrames = Math.ceil(duration * DEFAULT_CONFIG.fps);
     
     console.log(`🎬 Video will be ${duration.toFixed(2)}s long (${totalFrames} frames at ${DEFAULT_CONFIG.fps}fps)`);
@@ -170,7 +185,7 @@ export async function compileStoryVideo(
       console.log('🎵 Adding audio track...');
       
       // Resample audio if needed
-      const resampledAudio = await resampleAudioIfNeeded(audioBuffer, DEFAULT_CONFIG.audioSampleRate);
+      const resampledAudio = await resampleAudioIfNeeded(mixedAudioBuffer, DEFAULT_CONFIG.audioSampleRate);
       await audioBufferSource.add(resampledAudio);
       audioBufferSource.close();
       
@@ -319,4 +334,54 @@ async function resampleAudioIfNeeded(
   console.log(`   - Resampled: ${resampledBuffer.sampleRate}Hz, ${resampledBuffer.length} samples`);
   
   return resampledBuffer;
+}
+
+async function mixNarrationWithBackgroundMusic(
+  narrationBuffer: AudioBuffer,
+  backgroundMusicBuffer: AudioBuffer,
+  targetSampleRate: number
+): Promise<AudioBuffer> {
+  console.log('🎚️ Mixing narration with background music...');
+
+  const narrationResampled = await resampleAudioIfNeeded(narrationBuffer, targetSampleRate);
+  const backgroundResampled = await resampleAudioIfNeeded(backgroundMusicBuffer, targetSampleRate);
+
+  const outputChannels = Math.min(
+    DEFAULT_CONFIG.audioChannels,
+    Math.max(narrationResampled.numberOfChannels, backgroundResampled.numberOfChannels)
+  );
+
+  const outputLength = narrationResampled.length;
+  const mixedBuffer = new AudioBuffer({
+    length: outputLength,
+    numberOfChannels: outputChannels,
+    sampleRate: targetSampleRate,
+  });
+
+  const musicGain = 0.3;
+  const narrationGain = 1.0;
+
+  for (let channel = 0; channel < outputChannels; channel++) {
+    const narrationChannelIndex = Math.min(channel, narrationResampled.numberOfChannels - 1);
+    const backgroundChannelIndex = Math.min(channel, backgroundResampled.numberOfChannels - 1);
+
+    const narrationData = narrationResampled.getChannelData(narrationChannelIndex);
+    const backgroundData = backgroundResampled.getChannelData(backgroundChannelIndex);
+    const outputData = mixedBuffer.getChannelData(channel);
+
+    const backgroundLength = backgroundData.length;
+    for (let i = 0; i < outputLength; i++) {
+      const narrationSample = narrationData[i] ?? 0;
+      const backgroundSample = backgroundData[i % backgroundLength] ?? 0;
+      const mixed = (narrationSample * narrationGain) + (backgroundSample * musicGain);
+      outputData[i] = Math.max(-1, Math.min(1, mixed));
+    }
+  }
+
+  console.log(`🎚️ Audio mixed successfully:`);
+  console.log(`   - Duration: ${(outputLength / targetSampleRate).toFixed(2)}s (from narration)`);
+  console.log(`   - Channels: ${outputChannels}`);
+  console.log(`   - Music gain: ${musicGain}`);
+
+  return mixedBuffer;
 }
