@@ -3,9 +3,9 @@ import { ComfyUIAIGenerationFactory } from './factories/comfyuiFactory';
 import { GeminiAIGenerationFactory } from './factories/geminiFactory';
 import { constructImagePrompt } from './prompts';
 import { uploadVideoToSupabase } from './storage';
-import { AIGenerationFactory, AIProviderFactoryType, GeneratedStoryText } from './types';
+import { AIGenerationFactory, AIProviderFactoryType, GeneratedAudio, GeneratedStoryText } from './types';
 
-export type { AIGenerationFactory, AIProviderFactoryType, GeneratedStoryText } from './types';
+export type { AIGenerationFactory, AIProviderFactoryType, GeneratedAudio, GeneratedStoryText } from './types';
 export { constructImagePrompt, uploadVideoToSupabase };
 
 export const createAIGenerationFactory = (provider: AIProviderFactoryType = 'gemini'): AIGenerationFactory => {
@@ -22,7 +22,7 @@ export const generateCoverImage = async (config: AppConfig, story: Story): Promi
   return await factory.generateImage(config, story);
 };
 
-export const generateAudioSpeech = async (config: AppConfig, story: Story): Promise<string> => {
+export const generateAudioSpeech = async (config: AppConfig, story: Story): Promise<GeneratedAudio> => {
   const factory = createAIGenerationFactory('gemini');
   return await factory.generateAudio(config, story);
 };

@@ -1,7 +1,7 @@
 import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
-import { AIGenerationFactory, GeneratedStoryText } from '../types';
+import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import comfyZImageWorkflow from './comfy-zimage.json';
 import comfySD35Workflow from './comfy-image-sd35.json';
 import comfyMusicWorkflow from './comfy-music.json';
@@ -352,7 +352,7 @@ function createMusicWorkflow(story: Story): Record<string, any> {
   const workflow = JSON.parse(JSON.stringify(comfyMusicWorkflow));
   const musicPrompt = story.music?.trim() || `Cinematic ambient score inspired by: ${story.title}. ${story.summary}`;
   workflow['94'].inputs.tags = musicPrompt;
-  workflow['98'].inputs.seconds = 90; // TODO: calculate based on 'audio_url'
+  workflow['98'].inputs.seconds = story.duration;
   return workflow;
 }
 
@@ -411,7 +411,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
-  async generateAudio(_config: AppConfig, _story: Story): Promise<string> {
+  async generateAudio(_config: AppConfig, _story: Story): Promise<GeneratedAudio> {
     throw new Error('ComfyUI provider does not support audio generation. Use Gemini provider for audio.');
   }
 

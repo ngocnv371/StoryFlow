@@ -7,11 +7,11 @@ import { showAlert } from '../store/uiSlice';
 import { generateAudioSpeech } from '../services/aiService';
 import { Story } from '../types';
 
-interface AudioGeneratorProps {
+interface NarrationGeneratorProps {
   story: Story;
 }
 
-const AudioGenerator: React.FC<AudioGeneratorProps> = ({ story }) => {
+const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
   const config = useSelector((state: RootState) => state.config);
   const status = useSelector((state: RootState) => state.stories.audioGenerationStatuses[story.id] || 'idle');
@@ -28,8 +28,8 @@ const AudioGenerator: React.FC<AudioGeneratorProps> = ({ story }) => {
 
     dispatch(setAudioGenStatus({ id: story.id, status: 'generating' }));
     try {
-      const audioUrl = await generateAudioSpeech(config, story);
-      await dispatch(updateStoryRemote({ ...story, audio_url: audioUrl }));
+      const narration = await generateAudioSpeech(config, story);
+      await dispatch(updateStoryRemote({ ...story, audio_url: narration.url, duration: narration.duration }));
       dispatch(setAudioGenStatus({ id: story.id, status: 'idle' }));
       dispatch(showAlert({
         title: 'Success!',
@@ -78,4 +78,4 @@ const AudioGenerator: React.FC<AudioGeneratorProps> = ({ story }) => {
   );
 };
 
-export default AudioGenerator;
+export default NarrationGenerator;

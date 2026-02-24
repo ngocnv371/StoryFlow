@@ -3,7 +3,7 @@ import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
 import { buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
-import { AIGenerationFactory, GeneratedStoryText } from '../types';
+import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 
 export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
@@ -85,7 +85,7 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
-  async generateAudio(config: AppConfig, story: Story): Promise<string> {
+  async generateAudio(config: AppConfig, story: Story): Promise<GeneratedAudio> {
     const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
     const speed = config.audioGen.speed ?? 1;
@@ -116,7 +116,9 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       }
 
       const wavData = createWavHeader(pcmData, 24000);
-      return await uploadToSupabase('audio', `${story.id}.wav`, wavData, 'audio/wav');
+      const audioUrl = await uploadToSupabase('audio', `${story.id}.wav`, wavData, 'audio/wav');
+      const durationSeconds = Math.round(pcmData.length / (24000 * 2));
+      return { url: audioUrl, duration: durationSeconds };
     } catch (error: any) {
       console.error('Audio generation error details:', error);
       throw new Error(error.message || 'Audio generation failed.');

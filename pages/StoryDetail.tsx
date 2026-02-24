@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from '../store';
 import { updateStoryRemote } from '../store/storiesSlice';
 import { Story } from '../types';
 import CoverGenerator from '../components/CoverGenerator';
-import AudioGenerator from '../components/AudioGenerator';
+import NarrationGenerator from '../components/NarrationGenerator';
 import BackgroundMusicGenerator from '../components/BackgroundMusicGenerator';
 import VideoGenerator from '../components/VideoGenerator';
 import TranscriptGenerator from '../components/TranscriptGenerator';
@@ -64,7 +64,7 @@ const StoryDetail: React.FC = () => {
             </div>
             
             <CoverGenerator story={formData} />
-            <AudioGenerator story={formData} />
+            <NarrationGenerator story={formData} />
             <BackgroundMusicGenerator story={formData} />
             <VideoGenerator story={formData} />
 

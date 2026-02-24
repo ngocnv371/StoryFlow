@@ -21,10 +21,13 @@ CREATE TABLE public.stories (
   status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed')),
   thumbnail_url TEXT,
   audio_url TEXT,
+  duration INTEGER,
   music_url TEXT,
   video_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS duration INTEGER;
 
 -- 3. Enable RLS on Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

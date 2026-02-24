@@ -105,8 +105,8 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         setAutoGeneratingStep('Generating audio...');
         dispatch(setAudioGenStatus({ id: nextStory.id, status: 'generating' }));
 
-        const audioUrl = await generateAudioSpeech(config, nextStory);
-        nextStory = { ...nextStory, audio_url: audioUrl };
+        const narration = await generateAudioSpeech(config, nextStory);
+        nextStory = { ...nextStory, audio_url: narration.url, duration: narration.duration };
         await updateStoryLocallyAndRemotely(nextStory);
 
         dispatch(setAudioGenStatus({ id: nextStory.id, status: 'idle' }));

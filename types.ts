@@ -14,6 +14,7 @@ export interface Story {
   created_at: string;
   thumbnail_url: string;
   audio_url?: string;
+  duration?: number;
   music_url?: string;
   video_url?: string;
 }
