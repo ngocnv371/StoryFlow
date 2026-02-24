@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store';
-import { createStoryRemote } from '../store/storiesSlice';
+import { createStoryRemote, fetchStories } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
 import { showAlert } from '../store/uiSlice';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -12,8 +12,14 @@ const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const stories = useSelector((state: RootState) => state.stories.items);
+  const { items: stories, loading } = useSelector((state: RootState) => state.stories);
   const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    if (!loading && stories.length === 0) {
+      dispatch(fetchStories());
+    }
+  }, [dispatch, loading, stories.length]);
   
   const stats = [
     { label: 'Total Stories', value: stories.length, icon: '📚', color: 'bg-blue-500' },
