@@ -237,42 +237,44 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
             </video>
           </div>
           
-          <div className="flex gap-3">
-            <button
-              onClick={handleSaveToSupabase}
-              disabled={isSaving}
-              className={`flex-1 ${
-                isSaving 
-                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200 hover:-translate-y-0.5'
-              } text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  <span>Save to Cloud</span>
-                </>
-              )}
-            </button>
-            
-            <button
-              onClick={handleDownload}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-green-200 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download Video
-            </button>
-            
-            <div className="text-xs text-gray-500 flex items-center px-3">
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleSaveToSupabase}
+                disabled={isSaving}
+                className={`flex-1 ${
+                  isSaving 
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200 hover:-translate-y-0.5'
+                } min-w-[140px] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2`}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span>Save to Cloud</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={handleDownload}
+                className="flex-1 min-w-[140px] bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-green-200 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Video
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-500 sm:text-right">
               Size: {(videoBlob.size / (1024 * 1024)).toFixed(2)} MB
             </div>
           </div>
