@@ -100,12 +100,28 @@ async function extractImageResult(
   storyId: string,
   promptId?: string,
 ): Promise<string | null> {
+  const uploadImageFromUrl = async (url: string): Promise<string> => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch generated image (${response.status}).`);
+      }
+
+      const blob = await response.blob();
+      const contentType = blob.type || 'image/png';
+      const extension = contentType.includes('webp') ? 'webp' : contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png';
+      return await uploadToSupabase('thumbnails', `${storyId}.${extension}`, blob, contentType);
+    } catch {
+      return url;
+    }
+  };
+
   const directUrl =
     asNonEmptyString(data?.imageUrl) ||
     asNonEmptyString(data?.url) ||
     asNonEmptyString(data?.images?.[0]?.url);
   if (directUrl) {
-    return directUrl;
+    return await uploadImageFromUrl(directUrl);
   }
 
   const base64 =
@@ -121,7 +137,7 @@ async function extractImageResult(
     extractImageUrlFromComfyOutputs(data?.outputs, endpoint) ||
     extractImageUrlFromComfyOutputs(historyEntry?.outputs, endpoint);
   if (outputUrl) {
-    return outputUrl;
+    return await uploadImageFromUrl(outputUrl);
   }
 
   return null;
