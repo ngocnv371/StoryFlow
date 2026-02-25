@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
-import { updateStoryRemote } from '../store/storiesSlice';
+import { fetchStoryById, updateStoryRemote } from '../store/storiesSlice';
 import { Story } from '../types';
 import CoverGenerator from '../components/CoverGenerator';
 import NarrationGenerator from '../components/NarrationGenerator';
@@ -22,12 +22,51 @@ const StoryDetail: React.FC = () => {
   const story = useSelector((state: RootState) => state.stories.items.find(s => s.id === id));
 
   const [formData, setFormData] = useState<Story | null>(null);
+  const [isLoadingStory, setIsLoadingStory] = useState(false);
+  const [storyLoadFailed, setStoryLoadFailed] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   useEffect(() => {
+    if (!id || story) return;
+
+    setIsLoadingStory(true);
+    setStoryLoadFailed(false);
+
+    dispatch(fetchStoryById(id))
+      .unwrap()
+      .then((loadedStory) => {
+        if (!loadedStory) {
+          setStoryLoadFailed(true);
+        }
+      })
+      .catch(() => {
+        setStoryLoadFailed(true);
+      })
+      .finally(() => {
+        setIsLoadingStory(false);
+      });
+  }, [dispatch, id, story]);
+
+  useEffect(() => {
     if (story) setFormData(story);
   }, [story]);
+
+  if (isLoadingStory && !formData) return <div className="p-8">Loading Story...</div>;
+
+  if (storyLoadFailed && !formData) {
+    return (
+      <div className="p-8 space-y-4">
+        <p className="text-slate-600">Story not found or unavailable.</p>
+        <button
+          onClick={() => navigate('/projects')}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold"
+        >
+          Back to Projects
+        </button>
+      </div>
+    );
+  }
 
   if (!formData) return <div className="p-8">Loading Story...</div>;
 

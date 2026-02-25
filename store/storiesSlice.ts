@@ -23,6 +23,17 @@ export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
   return data as Story[];
 });
 
+export const fetchStoryById = createAsyncThunk('stories/fetchById', async (id: string) => {
+  const { data, error } = await supabase
+    .from('stories')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Story | null;
+});
+
 export const createStoryRemote = createAsyncThunk('stories/create', async (userId: string) => {
   const { data, error } = await supabase
     .from('stories')
@@ -140,6 +151,15 @@ const storiesSlice = createSlice({
       .addCase(fetchStories.fulfilled, (state, action) => {
         state.items = action.payload;
         state.loading = false;
+      })
+      .addCase(fetchStoryById.fulfilled, (state, action) => {
+        if (!action.payload) return;
+        const index = state.items.findIndex(s => s.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        } else {
+          state.items.unshift(action.payload);
+        }
       })
       .addCase(createStoryRemote.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
