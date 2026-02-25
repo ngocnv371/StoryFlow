@@ -8,12 +8,19 @@ import { useAuth } from '../context/AuthContext';
 import { showAlert } from '../store/uiSlice';
 import ProjectIdeasGenerator from '../components/ProjectIdeasGenerator';
 
+type StatusFilter = 'All' | 'Draft' | 'Pending' | 'Completed';
+
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items: stories, loading } = useSelector((state: RootState) => state.stories);
   const [isCreating, setIsCreating] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
+
+  const filteredStories = statusFilter === 'All'
+    ? stories
+    : stories.filter(story => story.status === statusFilter);
 
   useEffect(() => {
     dispatch(fetchStories());
@@ -82,8 +89,29 @@ const Projects: React.FC = () => {
           <button onClick={handleCreateNew} className="text-indigo-600 font-bold hover:underline">Create your first story</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {stories.map((story) => (
+        <div className="space-y-4">
+          <div className="flex items-center justify-end gap-2">
+            <label htmlFor="status-filter" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</label>
+            <select
+              id="status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="px-3 py-2 border rounded-xl bg-white text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            >
+              <option value="All">All</option>
+              <option value="Draft">Draft</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+
+          {filteredStories.length === 0 ? (
+            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-slate-300">
+              <p className="text-slate-500 font-medium">No projects match the selected status.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredStories.map((story) => (
             <Link key={story.id} to={`/projects/${story.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-all flex flex-col">
               <div className="relative aspect-video overflow-hidden bg-slate-100">
                 <img src={story.thumbnail_url || 'https://via.placeholder.com/400x225'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={story.title} />
@@ -107,7 +135,9 @@ const Projects: React.FC = () => {
                 </div>
               </div>
             </Link>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

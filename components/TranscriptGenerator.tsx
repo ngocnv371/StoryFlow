@@ -31,8 +31,9 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
     try {
       const { title, transcript, narrator, music, cover_prompt, tags } = await generateStoryTranscript(config, story);
       
+      const status = story.status === 'Draft' ? 'Pending' : story.status;
       // Update remote storage with all fields
-      await dispatch(updateStoryRemote({ ...story, title, transcript, narrator, music, cover_prompt, tags }));
+      await dispatch(updateStoryRemote({ ...story, title, transcript, narrator, music, cover_prompt, tags, status }));
       
       // Notify parent to update local state immediately if needed
       if (onGenerated) {

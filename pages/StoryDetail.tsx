@@ -108,6 +108,19 @@ const StoryDetail: React.FC = () => {
                   className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
                 />
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={e => setFormData({ ...formData, status: e.target.value as Story['status'] })}
+                  className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
               
               <TagEditor 
                 tags={formData.tags} 
