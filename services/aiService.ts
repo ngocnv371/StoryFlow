@@ -4,6 +4,7 @@ export {
   generateBackgroundMusic,
   generateAudioSpeech,
   generateCoverImage,
+  generateProjectIdeas,
   generateStoryTranscript,
   uploadVideoToSupabase,
 } from './ai';

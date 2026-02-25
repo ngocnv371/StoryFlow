@@ -1,7 +1,7 @@
 import { GoogleGenAI, Modality } from '@google/genai';
 import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
-import { buildTranscriptPrompt, constructImagePrompt } from '../prompts';
+import { buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 
@@ -48,6 +48,45 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     } catch (error: any) {
       console.error('Transcript generation error details:', error);
       throw new Error(error.message || 'Transcript generation failed.');
+    }
+  }
+
+  async generateProjectIdeas(config: AppConfig, theme: string): Promise<string[]> {
+    const apiKey = config.gemini.apiKey || process.env.API_KEY || '';
+    const ai = new GoogleGenAI({ apiKey });
+
+    try {
+      const response = await ai.models.generateContent({
+        model: config.gemini.textModel || 'gemini-3-flash-preview',
+        contents: buildProjectIdeasPrompt(theme),
+      });
+
+      if (!response.text) {
+        console.warn('Gemini returned an empty response for project ideas:', response);
+        throw new Error('Empty response from AI model');
+      }
+
+      const text = response.text.trim();
+      const cleanedText = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+      const parsed = JSON.parse(cleanedText);
+      if (!Array.isArray(parsed?.ideas)) {
+        throw new Error('AI response does not include an ideas array.');
+      }
+
+      const ideas = parsed.ideas
+        .map((idea: unknown) => (typeof idea === 'string' ? idea.trim() : ''))
+        .filter((idea: string) => idea.length > 0)
+        .slice(0, 10);
+
+      if (ideas.length !== 10) {
+        throw new Error('AI did not return exactly 10 valid ideas.');
+      }
+
+      return ideas;
+    } catch (error: any) {
+      console.error('Project ideas generation error details:', error);
+      throw new Error(error.message || 'Project ideas generation failed.');
     }
   }
 

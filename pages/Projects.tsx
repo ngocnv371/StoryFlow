@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from '../store';
 import { fetchStories, createStoryRemote } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
 import { showAlert } from '../store/uiSlice';
+import ProjectIdeasGenerator from '../components/ProjectIdeasGenerator';
 
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -44,24 +45,27 @@ const Projects: React.FC = () => {
           <h1 className="text-3xl font-bold text-slate-800">Your Projects</h1>
           <p className="text-slate-500">Manage and create immersive stories with AI.</p>
         </div>
-        <button
-          onClick={handleCreateNew}
-          disabled={isCreating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${
-            isCreating 
-              ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-200 hover:-translate-y-0.5'
-          }`}
-        >
-          {isCreating ? (
-            <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          )}
-          <span>New Project</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <ProjectIdeasGenerator />
+          <button
+            onClick={handleCreateNew}
+            disabled={isCreating}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${
+              isCreating 
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-200 hover:-translate-y-0.5'
+            }`}
+          >
+            {isCreating ? (
+              <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            )}
+            <span>New Project</span>
+          </button>
+        </div>
       </div>
 
       {loading && stories.length === 0 ? (

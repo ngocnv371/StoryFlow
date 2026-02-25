@@ -33,3 +33,20 @@ Title: ${story.title}.
 Summary: ${story.summary}. 
 Atmosphere: ${story.tags.join(', ')}. 
 Style: High-quality digital concept art, epic lighting, professional composition.`;
+
+export const buildProjectIdeasPrompt = (theme: string): string => `Generate exactly 10 concise short story ideas for a podcast.
+
+Theme: ${theme}
+
+Requirements:
+1. Return JSON only.
+2. Use this exact shape:
+{
+  "ideas": [
+    "idea 1",
+    "idea 2"
+  ]
+}
+3. Include exactly 10 unique ideas in "ideas".
+4. Each idea should be 1-2 sentences and suitable to use directly as a short story summary.
+5. Do not include markdown or code fences.`;

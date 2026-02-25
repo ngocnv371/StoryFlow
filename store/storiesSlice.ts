@@ -40,6 +40,43 @@ export const createStoryRemote = createAsyncThunk('stories/create', async (userI
   return data[0] as Story;
 });
 
+const makeIdeaTitle = (idea: string, index: number): string => {
+  const cleaned = idea
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleaned) {
+    return `Idea Project ${index + 1}`;
+  }
+
+  const trimmed = cleaned.length > 60 ? `${cleaned.slice(0, 57).trimEnd()}...` : cleaned;
+  return trimmed;
+};
+
+export const createStoriesFromIdeasRemote = createAsyncThunk(
+  'stories/createFromIdeas',
+  async ({ userId, ideas }: { userId: string; ideas: string[] }) => {
+    const rows = ideas.map((idea, index) => ({
+      user_id: userId,
+      title: makeIdeaTitle(idea, index),
+      summary: idea,
+      tags: ['idea', 'draft'],
+      status: 'Draft',
+      thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
+      transcript: ''
+    }));
+
+    const { data, error } = await supabase
+      .from('stories')
+      .insert(rows)
+      .select();
+
+    if (error) throw error;
+    return data as Story[];
+  }
+);
+
 export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story) => {
   const { data, error } = await supabase
     .from('stories')
@@ -106,6 +143,10 @@ const storiesSlice = createSlice({
       })
       .addCase(createStoryRemote.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+      })
+      .addCase(createStoriesFromIdeasRemote.fulfilled, (state, action) => {
+        const createdStories = [...action.payload].reverse();
+        state.items = [...createdStories, ...state.items];
       })
       .addCase(updateStoryRemote.fulfilled, (state, action) => {
         const index = state.items.findIndex(s => s.id === action.payload.id);

@@ -42,3 +42,12 @@ export const generateStoryTranscript = async (
   const factory = createAIGenerationFactory(provider);
   return await factory.generateText(config, storyDetails);
 };
+
+export const generateProjectIdeas = async (
+  config: AppConfig,
+  theme: string
+): Promise<string[]> => {
+  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(provider);
+  return await factory.generateProjectIdeas(config, theme);
+};
