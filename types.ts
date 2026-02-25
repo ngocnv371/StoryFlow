@@ -20,6 +20,14 @@ export interface Story {
 }
 
 export type AIProvider = 'gemini' | 'comfyui';
+export type GenerationType = 'text' | 'image' | 'narration' | 'music';
+
+export interface GenerationProviders {
+  text: AIProvider;
+  image: AIProvider;
+  narration: AIProvider;
+  music: AIProvider;
+}
 
 export interface GeminiConfig {
   apiKey: string;
@@ -52,7 +60,7 @@ export interface User {
 }
 
 export interface AppConfig {
-  provider: AIProvider;
+  generationProviders: GenerationProviders;
   gemini: GeminiConfig;
   comfy: ComfyConfig;
   audioGen: AudioGenConfig;

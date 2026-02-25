@@ -1,11 +1,16 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
 const defaultState: AppConfig = {
-  provider: 'gemini',
+  generationProviders: {
+    text: 'gemini',
+    image: 'gemini',
+    narration: 'gemini',
+    music: 'comfyui',
+  },
   gemini: {
     apiKey: '',
     textModel: 'gemini-3-flash-preview',
@@ -34,9 +39,15 @@ const loadConfigFromStorage = (): AppConfig => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      const legacyProvider: AIProvider = parsed.provider ?? parsed.imageGen?.provider ?? defaultState.generationProviders.image;
       // Merge with defaults to ensure all fields exist
       return {
-        provider: parsed.provider ?? parsed.imageGen?.provider ?? defaultState.provider,
+        generationProviders: {
+          text: parsed.generationProviders?.text ?? parsed.textGen?.provider ?? defaultState.generationProviders.text,
+          image: parsed.generationProviders?.image ?? legacyProvider,
+          narration: parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration,
+          music: parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music,
+        },
         gemini: {
           ...defaultState.gemini,
           ...parsed.gemini,
@@ -77,8 +88,8 @@ const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    setProvider: (state, action: PayloadAction<AIProvider>) => {
-      state.provider = action.payload;
+    setGenerationProvider: (state, action: PayloadAction<{ generationType: GenerationType; provider: AIProvider }>) => {
+      state.generationProviders[action.payload.generationType] = action.payload.provider;
     },
     setGeminiConfig: (state, action: PayloadAction<Partial<GeminiConfig>>) => {
       state.gemini = { ...state.gemini, ...action.payload };
@@ -95,5 +106,5 @@ const configSlice = createSlice({
   },
 });
 
-export const { setProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig } = configSlice.actions;
+export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig } = configSlice.actions;
 export default configSlice.reducer;

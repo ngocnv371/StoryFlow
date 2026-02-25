@@ -17,18 +17,20 @@ export const createAIGenerationFactory = (provider: AIProviderFactoryType = 'gem
 };
 
 export const generateCoverImage = async (config: AppConfig, story: Story): Promise<string> => {
-  const provider: AIProviderFactoryType = config.provider === 'comfyui' ? 'comfyui' : 'gemini';
+  const provider: AIProviderFactoryType = config.generationProviders.image === 'comfyui' ? 'comfyui' : 'gemini';
   const factory = createAIGenerationFactory(provider);
   return await factory.generateImage(config, story);
 };
 
 export const generateAudioSpeech = async (config: AppConfig, story: Story): Promise<GeneratedAudio> => {
-  const factory = createAIGenerationFactory('gemini');
+  const provider: AIProviderFactoryType = config.generationProviders.narration === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(provider);
   return await factory.generateAudio(config, story);
 };
 
 export const generateBackgroundMusic = async (config: AppConfig, story: Story): Promise<string> => {
-  const factory = createAIGenerationFactory('comfyui');
+  const provider: AIProviderFactoryType = config.generationProviders.music === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(provider);
   return await factory.generateMusic(config, story);
 };
 
@@ -36,6 +38,7 @@ export const generateStoryTranscript = async (
   config: AppConfig,
   storyDetails: Story
 ): Promise<GeneratedStoryText> => {
-  const factory = createAIGenerationFactory('gemini');
+  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(provider);
   return await factory.generateText(config, storyDetails);
 };
