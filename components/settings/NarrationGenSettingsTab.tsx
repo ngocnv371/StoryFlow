@@ -31,6 +31,14 @@ const NarrationGenSettingsTab: React.FC = () => {
           onChange={(e) => dispatch(setAudioGenConfig({ voice: e.target.value }))}
           className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
+        <a
+          href="https://docs.cloud.google.com/text-to-speech/docs/gemini-tts#voice_options"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-block text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
+        >
+          View Gemini TTS voice options
+        </a>
       </div>
 
       <div>

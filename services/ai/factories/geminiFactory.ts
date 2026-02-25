@@ -124,6 +124,12 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     }
   }
 
+  /**
+   * see https://ai.google.dev/gemini-api/docs/speech-generation
+   * @param config The application configuration containing API keys and model settings
+   * @param story The story object containing the transcript and other metadata
+   * @returns A promise that resolves to the generated audio object
+   */
   async generateAudio(config: AppConfig, story: Story): Promise<GeneratedAudio> {
     const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
