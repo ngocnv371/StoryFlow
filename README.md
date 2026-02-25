@@ -18,3 +18,15 @@ View your app in AI Studio: https://ai.studio/apps/drive/1a-CLxzUOM9dp6ZMJwc7sjM
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## YouTube Upload Setup (Post to YouTube button)
+
+1. In Google Cloud Console, create/select a project.
+2. Enable **YouTube Data API v3** for that project.
+3. Configure OAuth consent screen (External or Internal) and add test users if needed.
+4. Create an **OAuth 2.0 Client ID** of type **Web application**.
+5. Add your app origin(s) under **Authorized JavaScript origins** (for local dev: `http://localhost:3000`).
+6. Open StoryFlow → **Settings** → **Provider** → **YouTube Upload** and paste the OAuth Client ID.
+7. Compile a video, then click **Post to YouTube** next to **Download Video**.
+
+The upload uses your current story title, summary, transcript, tags, and the configured privacy status.

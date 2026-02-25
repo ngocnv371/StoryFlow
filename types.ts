@@ -53,6 +53,13 @@ export interface ImageGenConfig {
   cfg?: number;
 }
 
+export interface YouTubeConfig {
+  clientId: string;
+  privacyStatus: 'private' | 'public' | 'unlisted';
+  accessToken?: string;
+  accessTokenExpiresAt?: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -65,4 +72,5 @@ export interface AppConfig {
   comfy: ComfyConfig;
   audioGen: AudioGenConfig;
   imageGen: ImageGenConfig;
+  youtube: YouTubeConfig;
 }

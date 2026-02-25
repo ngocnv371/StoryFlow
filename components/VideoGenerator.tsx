@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setVideoGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
+import { setYouTubeConfig } from '../store/configSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
 import { uploadVideoToSupabase } from '../services/aiService';
 import { Story } from '../types';
 import { downloadVideo } from '@/services/util';
+import { uploadVideoToYouTube } from '../services/youtube';
 
 interface VideoGeneratorProps {
   story: Story;
@@ -15,11 +17,13 @@ interface VideoGeneratorProps {
 const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
   const status = useSelector((state: RootState) => state.stories.videoGenerationStatuses[story.id] || 'idle');
+  const youtubeConfig = useSelector((state: RootState) => state.config.youtube);
   const [showTooltip, setShowTooltip] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPostingToYouTube, setIsPostingToYouTube] = useState(false);
 
   const handleDownload = () => {
     if (videoBlob) {
@@ -56,6 +60,48 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       }));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePostToYouTube = async () => {
+    if (!videoBlob) return;
+
+    if (!youtubeConfig.clientId?.trim()) {
+      dispatch(showAlert({
+        title: 'YouTube Not Configured',
+        message: 'Add your YouTube OAuth Client ID in Settings > Provider > YouTube Upload before posting.',
+        type: 'error'
+      }));
+      return;
+    }
+
+    setIsPostingToYouTube(true);
+
+    try {
+      const uploadResult = await uploadVideoToYouTube({
+        videoBlob,
+        story,
+        clientId: youtubeConfig.clientId,
+        privacyStatus: youtubeConfig.privacyStatus,
+        accessToken: youtubeConfig.accessToken,
+        accessTokenExpiresAt: youtubeConfig.accessTokenExpiresAt,
+        onTokenRefresh: (token) => dispatch(setYouTubeConfig(token)),
+      });
+
+      dispatch(showAlert({
+        title: 'Posted to YouTube!',
+        message: `Upload complete: ${uploadResult.url}`,
+        type: 'success'
+      }));
+    } catch (error: any) {
+      console.error('YouTube upload error:', error);
+      dispatch(showAlert({
+        title: 'YouTube Upload Failed',
+        message: error.message || 'Failed to upload video to YouTube.',
+        type: 'error'
+      }));
+    } finally {
+      setIsPostingToYouTube(false);
     }
   };
 
@@ -271,6 +317,30 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Download Video
+              </button>
+
+              <button
+                onClick={handlePostToYouTube}
+                disabled={isPostingToYouTube}
+                className={`flex-1 min-w-[140px] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                  isPostingToYouTube
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-red-600 to-orange-600 hover:shadow-orange-200 hover:-translate-y-0.5'
+                }`}
+              >
+                {isPostingToYouTube ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Posting...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M23.5 6.2a2.94 2.94 0 00-2.07-2.08C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.43.62A2.94 2.94 0 00.5 6.2 30.14 30.14 0 000 12a30.14 30.14 0 00.5 5.8 2.94 2.94 0 002.07 2.08c1.83.62 9.43.62 9.43.62s7.6 0 9.43-.62a2.94 2.94 0 002.07-2.08A30.14 30.14 0 0024 12a30.14 30.14 0 00-.5-5.8zM9.75 15.98V8.02L16.5 12l-6.75 3.98z" />
+                    </svg>
+                    <span>Post to YouTube</span>
+                  </>
+                )}
               </button>
             </div>
 
