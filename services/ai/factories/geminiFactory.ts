@@ -4,6 +4,7 @@ import { createWavHeader } from '../../audio';
 import { buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
+import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
 
 export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
@@ -134,12 +135,13 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
     const speed = config.audioGen.speed ?? 1;
-    const voice = config.audioGen.voice || 'Kore';
+    const voice = config.audioGen.voice || story.metadata?.voice as string || 'Kore';
 
+    const transcript = story.transcript.substring(0, TRANSCRIPT_SOFT_LIMIT);
     try {
       const response = await ai.models.generateContent({
         model: config.gemini.audioModel || 'gemini-2.5-flash-preview-tts',
-        contents: [{ parts: [{ text: `Say naturally and cinematically at ${speed}x speed: ${story.transcript.substring(0, 1500)}` }] }],
+        contents: [{ parts: [{ text: `Narrate in a ${story.narrator}. At ${speed}x speed: ${transcript}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {

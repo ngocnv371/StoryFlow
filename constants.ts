@@ -1,0 +1,1 @@
+export const TRANSCRIPT_SOFT_LIMIT = 3000;

@@ -13,6 +13,7 @@ import TranscriptGenerator from '../components/TranscriptGenerator';
 import ImageInspector from '../components/ImageInspector';
 import TagEditor from '../components/TagEditor';
 import AutoGenerateButton from '../components/AutoGenerateButton';
+import { TRANSCRIPT_SOFT_LIMIT } from '../constants';
 
 const StoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -175,6 +176,11 @@ const StoryDetail: React.FC = () => {
               className="flex-1 p-8 text-lg text-slate-700 leading-relaxed outline-none resize-none bg-white font-serif"
               placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..." 
             />
+            <div className="px-4 py-2 border-t bg-slate-50 text-right">
+              <span className={`text-xs font-medium ${(formData.transcript?.length || 0) > TRANSCRIPT_SOFT_LIMIT ? 'text-amber-600' : 'text-slate-500'}`}>
+                {(formData.transcript?.length || 0).toLocaleString()} / {TRANSCRIPT_SOFT_LIMIT.toLocaleString()} characters
+              </span>
+            </div>
           </div>
 
         </div>
