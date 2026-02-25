@@ -148,7 +148,16 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         setAutoGeneratingStep('Compiling and saving video...');
         dispatch(setVideoGenStatus({ id: nextStory.id, status: 'generating' }));
 
-        const videoBlob = await compileStoryVideo(nextStory.thumbnail_url, nextStory.audio_url, nextStory.music_url, () => undefined);
+        const videoBlob = await compileStoryVideo(
+          nextStory.thumbnail_url,
+          nextStory.audio_url,
+          nextStory.music_url,
+          () => undefined,
+          {
+            enableKenBurns: config.video.enableKenBurns,
+            enableParticles: config.video.enableParticles,
+          }
+        );
         const videoUrl = await uploadVideoToSupabase(nextStory.id, videoBlob);
         nextStory = { ...nextStory, video_url: videoUrl };
         await updateStoryLocallyAndRemotely(nextStory);

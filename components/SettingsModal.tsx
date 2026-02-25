@@ -5,6 +5,7 @@ import TextGenSettingsTab from './settings/TextGenSettingsTab';
 import ImageGenSettingsTab from './settings/ImageGenSettingsTab';
 import NarrationGenSettingsTab from './settings/NarrationGenSettingsTab';
 import MusicGenSettingsTab from './settings/MusicGenSettingsTab';
+import VideoGenSettingsTab from './settings/VideoGenSettingsTab';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'provider' | 'text' | 'image' | 'narration' | 'music'>('provider');
+  const [activeTab, setActiveTab] = useState<'provider' | 'text' | 'image' | 'narration' | 'music' | 'video'>('provider');
 
   if (!isOpen) return null;
 
@@ -57,6 +58,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           >
             Music Gen
           </button>
+          <button
+            onClick={() => setActiveTab('video')}
+            className={`flex-1 py-3 font-medium transition-colors ${activeTab === 'video' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Video Gen
+          </button>
         </div>
 
         <div className="p-6 overflow-y-auto space-y-6 flex-1 min-h-0">
@@ -65,6 +72,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           {activeTab === 'image' && <ImageGenSettingsTab />}
           {activeTab === 'narration' && <NarrationGenSettingsTab />}
           {activeTab === 'music' && <MusicGenSettingsTab />}
+          {activeTab === 'video' && <VideoGenSettingsTab />}
         </div>
 
         <div className="p-6 bg-slate-50 border-t flex justify-end gap-3">

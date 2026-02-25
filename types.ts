@@ -60,6 +60,11 @@ export interface YouTubeConfig {
   accessTokenExpiresAt?: number;
 }
 
+export interface VideoGenConfig {
+  enableKenBurns: boolean;
+  enableParticles: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -72,5 +77,6 @@ export interface AppConfig {
   comfy: ComfyConfig;
   audioGen: AudioGenConfig;
   imageGen: ImageGenConfig;
+  video: VideoGenConfig;
   youtube: YouTubeConfig;
 }

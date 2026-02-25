@@ -1,6 +1,6 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
@@ -30,6 +30,10 @@ const defaultState: AppConfig = {
     width: 1280,
     height: 720,
     cfg: 7,
+  },
+  video: {
+    enableKenBurns: true,
+    enableParticles: true,
   },
   youtube: {
     clientId: '',
@@ -71,6 +75,7 @@ const loadConfigFromStorage = (): AppConfig => {
         },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
         imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
+        video: { ...defaultState.video, ...parsed.video },
         youtube: {
           ...defaultState.youtube,
           ...parsed.youtube,
@@ -113,11 +118,14 @@ const configSlice = createSlice({
     setImageGenConfig: (state, action: PayloadAction<Partial<ImageGenConfig>>) => {
       state.imageGen = { ...state.imageGen, ...action.payload };
     },
+    setVideoGenConfig: (state, action: PayloadAction<Partial<VideoGenConfig>>) => {
+      state.video = { ...state.video, ...action.payload };
+    },
     setYouTubeConfig: (state, action: PayloadAction<Partial<YouTubeConfig>>) => {
       state.youtube = { ...state.youtube, ...action.payload };
     },
   },
 });
 
-export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig, setYouTubeConfig } = configSlice.actions;
+export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
 export default configSlice.reducer;

@@ -18,6 +18,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
   const status = useSelector((state: RootState) => state.stories.videoGenerationStatuses[story.id] || 'idle');
   const youtubeConfig = useSelector((state: RootState) => state.config.youtube);
+  const videoConfig = useSelector((state: RootState) => state.config.video);
   const [showTooltip, setShowTooltip] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
@@ -132,7 +133,11 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         story.thumbnail_url,
         story.audio_url,
         story.music_url,
-        (progressValue) => setProgress(Math.round(progressValue * 100))
+        (progressValue) => setProgress(Math.round(progressValue * 100)),
+        {
+          enableKenBurns: videoConfig.enableKenBurns,
+          enableParticles: videoConfig.enableParticles,
+        }
       );
       
       console.log('Video compilation completed. Blob size:', compiledVideoBlob.size, 'bytes');

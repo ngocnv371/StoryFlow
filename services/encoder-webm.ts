@@ -20,6 +20,34 @@ interface VideoConfig {
   audioChannels: number;
 }
 
+interface CompileRenderOptions {
+  enableKenBurns?: boolean;
+  enableParticles?: boolean;
+}
+
+interface CompileArgsResolved {
+  backgroundMusicUrl?: string;
+  onProgress?: (progress: number) => void;
+  renderOptions: Required<CompileRenderOptions>;
+}
+
+interface CoverPlacement {
+  drawWidth: number;
+  drawHeight: number;
+  drawX: number;
+  drawY: number;
+}
+
+interface Particle {
+  x: number;
+  y: number;
+  radius: number;
+  speed: number;
+  alpha: number;
+  drift: number;
+  phase: number;
+}
+
 const DEFAULT_CONFIG: VideoConfig = {
   width: 1280,
   height: 720,
@@ -28,6 +56,11 @@ const DEFAULT_CONFIG: VideoConfig = {
   audioBitrate: 128000,
   audioSampleRate: 48000,
   audioChannels: 2,
+};
+
+const DEFAULT_RENDER_OPTIONS: Required<CompileRenderOptions> = {
+  enableKenBurns: true,
+  enableParticles: true,
 };
 
 /**
@@ -76,15 +109,15 @@ async function loadAndDecodeAudio(audioUrl: string): Promise<AudioBuffer> {
 export async function compileStoryVideo(
   coverImageUrl: string, 
   audioUrl: string,
-  backgroundMusicUrlOrProgress?: string | ((progress: number) => void),
-  onProgressMaybe?: (progress: number) => void
+  backgroundMusicUrlOrProgressOrOptions?: string | ((progress: number) => void) | CompileRenderOptions,
+  onProgressOrOptionsMaybe?: ((progress: number) => void) | CompileRenderOptions,
+  optionsMaybe?: CompileRenderOptions
 ): Promise<Blob> {
-  const backgroundMusicUrl = typeof backgroundMusicUrlOrProgress === 'string'
-    ? backgroundMusicUrlOrProgress
-    : undefined;
-  const onProgress = typeof backgroundMusicUrlOrProgress === 'function'
-    ? backgroundMusicUrlOrProgress
-    : onProgressMaybe;
+  const { backgroundMusicUrl, onProgress, renderOptions } = resolveCompileArgs(
+    backgroundMusicUrlOrProgressOrOptions,
+    onProgressOrOptionsMaybe,
+    optionsMaybe
+  );
   
   console.log('🚀 Starting video compilation...');
   console.log(`📄 Cover image URL: ${coverImageUrl}`);
@@ -114,8 +147,16 @@ export async function compileStoryVideo(
     const canvas = new OffscreenCanvas(DEFAULT_CONFIG.width, DEFAULT_CONFIG.height);
     const ctx = canvas.getContext('2d', { alpha: false })!;
 
-    // Draw the cover image to fill the canvas
-    drawCoverImageToCanvas(ctx, coverImage, DEFAULT_CONFIG.width, DEFAULT_CONFIG.height);
+    const coverPlacement = calculateCoverPlacement(
+      coverImage,
+      DEFAULT_CONFIG.width,
+      DEFAULT_CONFIG.height
+    );
+
+    const kenBurnsPath = createKenBurnsPath();
+    const particles = renderOptions.enableParticles
+      ? createParticles(DEFAULT_CONFIG.width, DEFAULT_CONFIG.height)
+      : [];
 
     // Create output
     const output = new Output({
@@ -161,11 +202,24 @@ export async function compileStoryVideo(
     
     console.log('🎬 Rendering video frames...');
     
-    // Render all frames (static image)
+    // Render all frames
     for (let currentFrame = 0; currentFrame < totalFrames; currentFrame++) {
       const currentTime = currentFrame / DEFAULT_CONFIG.fps;
+
+      renderFrame(ctx, {
+        image: coverImage,
+        placement: coverPlacement,
+        canvasWidth: DEFAULT_CONFIG.width,
+        canvasHeight: DEFAULT_CONFIG.height,
+        currentFrame,
+        totalFrames,
+        currentTime,
+        particles,
+        enableKenBurns: renderOptions.enableKenBurns,
+        enableParticles: renderOptions.enableParticles,
+        kenBurnsPath,
+      });
       
-      // Add frame to video (canvas content is already drawn and static)
       await canvasSource.add(currentTime, 1 / DEFAULT_CONFIG.fps);
       
       // Report progress
@@ -218,6 +272,55 @@ export async function compileStoryVideo(
   }
 }
 
+function resolveCompileArgs(
+  arg3?: string | ((progress: number) => void) | CompileRenderOptions,
+  arg4?: ((progress: number) => void) | CompileRenderOptions,
+  arg5?: CompileRenderOptions
+): CompileArgsResolved {
+  let backgroundMusicUrl: string | undefined;
+  let onProgress: ((progress: number) => void) | undefined;
+  let renderOptions: CompileRenderOptions | undefined;
+
+  if (typeof arg3 === 'string') {
+    backgroundMusicUrl = arg3;
+  } else if (typeof arg3 === 'function') {
+    onProgress = arg3;
+  } else if (isCompileRenderOptions(arg3)) {
+    renderOptions = arg3;
+  }
+
+  if (typeof arg4 === 'function') {
+    onProgress = arg4;
+  } else if (isCompileRenderOptions(arg4)) {
+    renderOptions = arg4;
+  }
+
+  if (isCompileRenderOptions(arg5)) {
+    renderOptions = arg5;
+  }
+
+  return {
+    backgroundMusicUrl,
+    onProgress,
+    renderOptions: {
+      ...DEFAULT_RENDER_OPTIONS,
+      ...(renderOptions ?? {}),
+    },
+  };
+}
+
+function isCompileRenderOptions(value: unknown): value is CompileRenderOptions {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const maybeOptions = value as CompileRenderOptions;
+  return (
+    typeof maybeOptions.enableKenBurns === 'boolean' ||
+    typeof maybeOptions.enableParticles === 'boolean'
+  );
+}
+
 /**
  * Enhanced image loading with detailed logging
  */
@@ -257,18 +360,11 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 /**
  * Draw cover image to canvas with proper scaling and centering
  */
-function drawCoverImageToCanvas(
-  ctx: OffscreenCanvasRenderingContext2D, 
-  img: HTMLImageElement, 
-  canvasWidth: number, 
+function calculateCoverPlacement(
+  img: HTMLImageElement,
+  canvasWidth: number,
   canvasHeight: number
-) {
-  console.log('🖼️ Drawing cover image to canvas...');
-  
-  // Clear canvas with black background
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-  
+): CoverPlacement {
   // Calculate scaling to fit image while maintaining aspect ratio
   const imageAspect = img.width / img.height;
   const canvasAspect = canvasWidth / canvasHeight;
@@ -292,13 +388,133 @@ function drawCoverImageToCanvas(
     drawY = 0;
   }
   
-  // Draw the image
-  ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-  
-  console.log(`🖼️ Image drawn to canvas:`);
+  console.log(`🖼️ Cover placement calculated:`);
   console.log(`   - Canvas: ${canvasWidth}x${canvasHeight}px`);
   console.log(`   - Image: ${img.width}x${img.height}px`);
   console.log(`   - Drawn: ${drawWidth.toFixed(0)}x${drawHeight.toFixed(0)}px at (${drawX.toFixed(0)}, ${drawY.toFixed(0)})`);
+
+  return {
+    drawWidth,
+    drawHeight,
+    drawX,
+    drawY,
+  };
+}
+
+function createKenBurnsPath() {
+  const directions = [
+    { startX: -1, startY: 0, endX: 1, endY: 0 },
+    { startX: 1, startY: 0, endX: -1, endY: 0 },
+    { startX: 0, startY: -1, endX: 0, endY: 1 },
+    { startX: 0, startY: 1, endX: 0, endY: -1 },
+  ];
+
+  return directions[Math.floor(Math.random() * directions.length)];
+}
+
+function createParticles(canvasWidth: number, canvasHeight: number): Particle[] {
+  const particleCount = Math.max(24, Math.floor((canvasWidth * canvasHeight) / 30000));
+  const particles: Particle[] = [];
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * canvasWidth,
+      y: Math.random() * canvasHeight,
+      radius: 0.8 + Math.random() * 2.2,
+      speed: 8 + Math.random() * 18,
+      alpha: 0.03 + Math.random() * 0.09,
+      drift: 0.2 + Math.random() * 0.8,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+
+  return particles;
+}
+
+function easeInOutSine(x: number): number {
+  return -(Math.cos(Math.PI * x) - 1) / 2;
+}
+
+function lerp(start: number, end: number, amount: number): number {
+  return start + (end - start) * amount;
+}
+
+function renderFrame(
+  ctx: OffscreenCanvasRenderingContext2D,
+  params: {
+    image: HTMLImageElement;
+    placement: CoverPlacement;
+    canvasWidth: number;
+    canvasHeight: number;
+    currentFrame: number;
+    totalFrames: number;
+    currentTime: number;
+    particles: Particle[];
+    enableKenBurns: boolean;
+    enableParticles: boolean;
+    kenBurnsPath: { startX: number; startY: number; endX: number; endY: number };
+  }
+) {
+  const {
+    image,
+    placement,
+    canvasWidth,
+    canvasHeight,
+    currentFrame,
+    totalFrames,
+    currentTime,
+    particles,
+    enableKenBurns,
+    enableParticles,
+    kenBurnsPath,
+  } = params;
+
+  const frameProgress = totalFrames <= 1 ? 0 : currentFrame / (totalFrames - 1);
+  const easedProgress = easeInOutSine(frameProgress);
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  const zoom = enableKenBurns ? lerp(1, 1.08, easedProgress) : 1;
+  const scaledWidth = placement.drawWidth * zoom;
+  const scaledHeight = placement.drawHeight * zoom;
+
+  const maxOffsetX = Math.max(0, (scaledWidth - placement.drawWidth) / 2);
+  const maxOffsetY = Math.max(0, (scaledHeight - placement.drawHeight) / 2);
+
+  const panX = enableKenBurns
+    ? lerp(kenBurnsPath.startX, kenBurnsPath.endX, easedProgress) * maxOffsetX * 0.8
+    : 0;
+  const panY = enableKenBurns
+    ? lerp(kenBurnsPath.startY, kenBurnsPath.endY, easedProgress) * maxOffsetY * 0.8
+    : 0;
+
+  const drawX = placement.drawX - (scaledWidth - placement.drawWidth) / 2 + panX;
+  const drawY = placement.drawY - (scaledHeight - placement.drawHeight) / 2 + panY;
+
+  ctx.drawImage(image, drawX, drawY, scaledWidth, scaledHeight);
+
+  if (enableParticles) {
+    renderParticles(ctx, particles, currentTime, canvasWidth, canvasHeight);
+  }
+}
+
+function renderParticles(
+  ctx: OffscreenCanvasRenderingContext2D,
+  particles: Particle[],
+  currentTime: number,
+  canvasWidth: number,
+  canvasHeight: number
+) {
+  for (const particle of particles) {
+    const x = (particle.x + Math.sin(currentTime * 0.35 + particle.phase) * particle.drift * 26 + canvasWidth) % canvasWidth;
+    const y = (particle.y - currentTime * particle.speed + canvasHeight) % canvasHeight;
+
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(255, 255, 255, ${particle.alpha.toFixed(3)})`;
+    ctx.arc(x, y, particle.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 /**
