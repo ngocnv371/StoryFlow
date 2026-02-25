@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SettingsModal from './SettingsModal';
 import AlertDialog from './AlertDialog';
+import storyFlowLogo from '../assets/story-flow-logo.png';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { logout, user } = useAuth();
@@ -27,7 +28,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col shadow-sm">
         <div className="p-6">
           <div className="flex items-center gap-3 text-indigo-600">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">SF</div>
+            <img src={storyFlowLogo} alt="StoryFlow logo" className="w-8 h-8 rounded-lg object-cover" />
             <h1 className="text-xl font-bold tracking-tight text-slate-800">StoryFlow</h1>
           </div>
         </div>
