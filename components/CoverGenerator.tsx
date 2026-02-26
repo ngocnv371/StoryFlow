@@ -63,7 +63,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.341A8.001 8.001 0 114.572 8.659m14.856 6.682l1.374 1.373a1 1 0 010 1.414l-1.374 1.374a1 1 0 01-1.414 0l-1.373-1.374a1 1 0 010-1.414l1.373-1.373a1 1 0 011.414 0z" />
             </svg>
-            <span>Magic Cover Photo</span>
+            <span>Generate Cover</span>
           </>
         )}
       </button>
