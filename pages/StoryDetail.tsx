@@ -126,7 +126,7 @@ const StoryDetail: React.FC = () => {
             onClick={handleSave}
             className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg"
           >
-            Save
+            💾 Save
           </button>
         </div>
       </div>

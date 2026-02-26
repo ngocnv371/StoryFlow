@@ -208,7 +208,7 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
             : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
         }`}
       >
-        {isAutoGenerating ? autoGeneratingStep || 'Running...' : 'Auto Generate'}
+        {isAutoGenerating ? autoGeneratingStep || 'Running...' : '⚡Auto Generate'}
       </button>
 
       {isAutoDialogOpen && (
