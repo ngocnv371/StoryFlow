@@ -347,6 +347,7 @@ function createZImageWorkflow(story: Story, config: AppConfig) {
 
   const workflow = JSON.parse(JSON.stringify(comfyZImageWorkflow));
   // the indexes "6" and "13" are based on the structure of comfy-zimage.json and may need to be updated if the workflow changes
+  workflow["3"].inputs.seed = Math.floor(Math.random() * 1000000);
   workflow["6"].inputs.text = prompt;
   workflow["13"].inputs.width = config.imageGen.width || 512;
   workflow["13"].inputs.height = config.imageGen.height || 512;
@@ -358,6 +359,7 @@ function createSD35ImageWorkflow(story: Story, config: AppConfig) {
 
   const workflow = JSON.parse(JSON.stringify(comfySD35Workflow));
   // the indexes "6" and "5" are based on the structure of comfy-sample-flow.json and may need to be updated if the workflow changes
+  workflow["3"].inputs.seed = Math.floor(Math.random() * 1000000);
   workflow["6"].inputs.text = prompt;
   workflow["5"].inputs.width = config.imageGen.width || 512;
   workflow["5"].inputs.height = config.imageGen.height || 512;
@@ -367,6 +369,7 @@ function createSD35ImageWorkflow(story: Story, config: AppConfig) {
 function createMusicWorkflow(story: Story): Record<string, any> {
   const workflow = JSON.parse(JSON.stringify(comfyMusicWorkflow));
   const musicPrompt = story.music?.trim() || `Cinematic ambient score inspired by: ${story.title}. ${story.summary}`;
+  workflow['94'].inputs.seed = Math.floor(Math.random() * 1000000);
   workflow['94'].inputs.tags = musicPrompt;
   workflow['94'].inputs.duration = story.duration;
   workflow['98'].inputs.seconds = story.duration;
