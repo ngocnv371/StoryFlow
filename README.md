@@ -1,4 +1,4 @@
-![Upload Demo](assets/story-flow-logo.png)
+![Upload Demo](assets/story-flow-banner.png)
 
 # StoryFlow
 
