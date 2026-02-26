@@ -43,6 +43,16 @@ export const generateStoryTranscript = async (
   return await factory.generateText(config, storyDetails);
 };
 
+export const extendStoryTranscript = async (
+  config: AppConfig,
+  tags: string[],
+  transcript: string
+): Promise<string> => {
+  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(provider);
+  return await factory.extendTranscript(config, tags, transcript);
+};
+
 export const generateProjectIdeas = async (
   config: AppConfig,
   theme: string

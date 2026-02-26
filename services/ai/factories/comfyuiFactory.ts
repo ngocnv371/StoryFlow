@@ -377,6 +377,10 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     throw new Error('ComfyUI provider does not support text generation. Use Gemini provider for text.');
   }
 
+  async extendTranscript(_config: AppConfig, _tags: string[], _transcript: string): Promise<string> {
+    throw new Error('ComfyUI provider does not support text generation. Use Gemini provider for text.');
+  }
+
   async generateProjectIdeas(_config: AppConfig, _theme: string): Promise<string[]> {
     throw new Error('ComfyUI provider does not support text generation. Use Gemini provider for text.');
   }

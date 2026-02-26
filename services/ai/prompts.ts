@@ -50,3 +50,15 @@ Requirements:
 3. Include exactly 10 unique ideas in "ideas".
 4. Each idea should be 1-2 sentences and suitable to use directly as a short story summary.
 5. Do not include markdown or code fences.`;
+
+export const buildExtendTranscriptPrompt = (tags: string[], transcript: string): string => `Write the next part of this story transcript.
+
+Tags: ${tags.join(', ')}
+Current transcript:
+${transcript}
+
+IMPORTANT INSTRUCTIONS:
+1. Return plain text only (no JSON, no markdown, no code fences).
+2. Continue naturally from the last sentence with consistent tone and pacing.
+3. Do not repeat earlier paragraphs.
+4. Keep it narration-only text.`;

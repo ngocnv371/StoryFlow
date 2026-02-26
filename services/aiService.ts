@@ -6,6 +6,7 @@ export {
   generateCoverImage,
   generateProjectIdeas,
   generateStoryTranscript,
+  extendStoryTranscript,
   uploadVideoToSupabase,
 } from './ai';
 

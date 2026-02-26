@@ -10,6 +10,7 @@ export type GeneratedAudio = {
 
 export interface AIGenerationFactory {
   generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText>;
+  extendTranscript(config: AppConfig, tags: string[], transcript: string): Promise<string>;
   generateProjectIdeas(config: AppConfig, theme: string): Promise<string[]>;
   generateImage(config: AppConfig, story: Story): Promise<string>;
   generateAudio(config: AppConfig, story: Story): Promise<GeneratedAudio>;

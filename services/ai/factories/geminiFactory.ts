@@ -1,7 +1,7 @@
 import { GoogleGenAI, Modality } from '@google/genai';
 import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
-import { buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
+import { buildExtendTranscriptPrompt, buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
@@ -49,6 +49,32 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     } catch (error: any) {
       console.error('Transcript generation error details:', error);
       throw new Error(error.message || 'Transcript generation failed.');
+    }
+  }
+
+  async extendTranscript(config: AppConfig, tags: string[], transcript: string): Promise<string> {
+    const apiKey = config.gemini.apiKey || process.env.API_KEY || '';
+    const ai = new GoogleGenAI({ apiKey });
+
+    try {
+      const response = await ai.models.generateContent({
+        model: config.gemini.textModel || 'gemini-3-flash-preview',
+        contents: buildExtendTranscriptPrompt(tags, transcript),
+      });
+
+      if (!response.text) {
+        console.warn('Gemini returned an empty response for transcript extension:', response);
+        throw new Error('Empty response from AI model');
+      }
+
+      return response.text
+        .trim()
+        .replace(/^```(?:text|markdown)?\s*/i, '')
+        .replace(/\s*```$/, '')
+        .trim();
+    } catch (error: any) {
+      console.error('Transcript extension error details:', error);
+      throw new Error(error.message || 'Transcript extension failed.');
     }
   }
 
