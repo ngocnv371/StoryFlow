@@ -12,6 +12,18 @@ import { Story } from '@/types';
 type StatusFilter = Story['status'] | 'All';
 const MAX_VISIBLE_TAGS = 3;
 
+const formatDuration = (duration?: number): string => {
+  if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) {
+    return '—';
+  }
+
+  const totalSeconds = Math.round(duration);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -114,7 +126,12 @@ const Projects: React.FC = () => {
             <Link key={story.id} to={`/projects/${story.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-all flex flex-col">
               <div className="relative aspect-video overflow-hidden bg-slate-100">
                 <img src={story.thumbnail_url || 'https://via.placeholder.com/400x225'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={story.title} />
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  {formatDuration(story.duration) !== '—' && (
+                    <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-full shadow-sm bg-white/90 text-slate-700 backdrop-blur-sm">
+                      {formatDuration(story.duration)}
+                    </span>
+                  )}
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-sm ${
                     story.status === 'Completed' ? 'bg-emerald-500 text-white' :
                     story.status === 'Pending' ? 'bg-amber-500 text-white' :
