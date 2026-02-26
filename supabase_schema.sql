@@ -18,7 +18,7 @@ CREATE TABLE public.stories (
   cover_prompt TEXT,
   narrator TEXT,
   music TEXT,
-  status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed')),
+  status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed', 'Archived')),
   thumbnail_url TEXT,
   audio_url TEXT,
   duration INTEGER,

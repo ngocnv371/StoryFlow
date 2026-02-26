@@ -7,8 +7,10 @@ import { fetchStories, createStoryRemote } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
 import ProjectIdeasGenerator from '../components/ProjectIdeasGenerator';
 import toast from 'react-hot-toast';
+import { Story } from '@/types';
 
-type StatusFilter = 'All' | 'Draft' | 'Pending' | 'Completed';
+type StatusFilter = Story['status'] | 'All';
+const MAX_VISIBLE_TAGS = 3;
 
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -98,6 +100,7 @@ const Projects: React.FC = () => {
               <option value="Draft">Draft</option>
               <option value="Pending">Pending</option>
               <option value="Completed">Completed</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
 
@@ -125,9 +128,14 @@ const Projects: React.FC = () => {
                 <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">{story.title}</h3>
                 <p className="text-sm text-slate-500 line-clamp-2 mb-4">{story.summary}</p>
                 <div className="flex flex-wrap gap-1 mt-auto">
-                  {story.tags.map(tag => (
+                  {story.tags.slice(0, MAX_VISIBLE_TAGS).map(tag => (
                     <span key={tag} className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">#{tag}</span>
                   ))}
+                  {story.tags.length > MAX_VISIBLE_TAGS && (
+                    <span className="bg-slate-200 text-slate-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                      +{story.tags.length - MAX_VISIBLE_TAGS}
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>

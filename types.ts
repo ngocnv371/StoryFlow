@@ -10,7 +10,7 @@ export interface Story {
   cover_prompt?: string;
   narrator?: string;
   music?: string;
-  status: 'Draft' | 'Pending' | 'Completed';
+  status: 'Draft' | 'Pending' | 'Completed' | 'Archived';
   created_at: string;
   thumbnail_url: string;
   audio_url?: string;

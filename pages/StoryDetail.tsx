@@ -13,6 +13,7 @@ import CoverSection from "../components/story-detail/CoverSection";
 import MusicSection from "../components/story-detail/MusicSection";
 import TagsSection from "../components/story-detail/TagsSection";
 import TranscriptSection from "../components/story-detail/TranscriptSection";
+import StoryStatusSelect from "../components/story-detail/StoryStatusSelect";
 import toast from "react-hot-toast";
 
 const StoryDetail: React.FC = () => {
@@ -109,17 +110,10 @@ const StoryDetail: React.FC = () => {
         </button>
         <div className="flex items-center gap-4">
           <div className="w-36">
-            <select
+            <StoryStatusSelect
               value={formData.status}
-              onChange={(e) =>
-                handleUpdate({ status: e.target.value as Story["status"] })
-              }
-              className="w-full px-3 py-2 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            >
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-            </select>
+              onChange={(status) => handleUpdate({ status })}
+            />
           </div>
           <AutoGenerateButton story={formData} onStoryUpdated={setFormData} />
           <button
