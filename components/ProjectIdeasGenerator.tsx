@@ -2,9 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { generateProjectIdeas } from '../services/aiService';
-import { showAlert } from '../store/uiSlice';
 import { createStoriesFromIdeasRemote } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 type ModalStep = 'theme' | 'generating' | 'review' | 'creating';
 
@@ -37,11 +37,7 @@ const ProjectIdeasGenerator: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!theme.trim()) {
-      dispatch(showAlert({
-        title: 'Theme Required',
-        message: 'Please enter a theme before generating ideas.',
-        type: 'warning'
-      }));
+      toast('Please enter a theme before generating ideas.');
       return;
     }
 
@@ -54,11 +50,7 @@ const ProjectIdeasGenerator: React.FC = () => {
       setStep('review');
     } catch (error: any) {
       setStep('theme');
-      dispatch(showAlert({
-        title: 'Idea Generation Failed',
-        message: error.message || 'Unable to generate project ideas. Check your text generation provider settings.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Unable to generate project ideas. Check your text generation provider settings.');
     }
   };
 
@@ -71,11 +63,7 @@ const ProjectIdeasGenerator: React.FC = () => {
 
     const selectedIdeas = ideas.filter((_, index) => approved[index]);
     if (selectedIdeas.length === 0) {
-      dispatch(showAlert({
-        title: 'No Ideas Selected',
-        message: 'Select at least one idea to create projects.',
-        type: 'warning'
-      }));
+      toast('Select at least one idea to create projects.');
       return;
     }
 
@@ -91,20 +79,12 @@ const ProjectIdeasGenerator: React.FC = () => {
         throw new Error(resultAction.error.message || 'Failed to create projects from approved ideas.');
       }
 
-      dispatch(showAlert({
-        title: 'Projects Created',
-        message: `Created ${selectedIdeas.length} new project${selectedIdeas.length > 1 ? 's' : ''} from approved ideas.`,
-        type: 'success'
-      }));
+      toast.success(`Created ${selectedIdeas.length} new project${selectedIdeas.length > 1 ? 's' : ''} from approved ideas.`);
 
       setIsOpen(false);
     } catch (error: any) {
       setStep('review');
-      dispatch(showAlert({
-        title: 'Project Creation Failed',
-        message: error.message || 'Unable to create projects at this time.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Unable to create projects at this time.');
     }
   };
 

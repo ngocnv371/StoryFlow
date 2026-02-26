@@ -3,10 +3,10 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { setAudioGenStatus, updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { generateAudioSpeech } from '../services/aiService';
 import { Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
+import toast from 'react-hot-toast';
 
 interface NarrationGeneratorProps {
   story: Story;
@@ -20,11 +20,7 @@ const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
 
   const handleGenerate = async () => {
     if (!story.transcript) {
-      dispatch(showAlert({
-        title: 'Missing Content',
-        message: 'Please generate or write a transcript before creating a narration.',
-        type: 'warning'
-      }));
+      toast('Please generate or write a transcript before creating a narration.');
       return;
     }
 
@@ -33,19 +29,11 @@ const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
       const narration = await generateAudioSpeech(effectiveConfig, story);
       await dispatch(updateStoryRemote({ ...story, audio_url: narration.url, duration: narration.duration }));
       dispatch(setAudioGenStatus({ id: story.id, status: 'idle' }));
-      dispatch(showAlert({
-        title: 'Success!',
-        message: 'Your story narration has been generated and saved.',
-        type: 'success'
-      }));
+      toast.success('Your story narration has been generated and saved.');
     } catch (error: any) {
       console.error(error);
       dispatch(setAudioGenStatus({ id: story.id, status: 'error' }));
-      dispatch(showAlert({
-        title: 'Generation Failed',
-        message: error.message || 'An unexpected error occurred during audio generation.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'An unexpected error occurred during audio generation.');
     }
   };
 

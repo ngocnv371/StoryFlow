@@ -9,6 +9,7 @@ import Home from './pages/Home';
 import Projects from './pages/Projects';
 import StoryDetail from './pages/StoryDetail';
 import Login from './pages/Login';
+import { Toaster } from 'react-hot-toast';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -53,6 +54,7 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </HashRouter>
+        <Toaster position="top-right" />
       </AuthProvider>
     </Provider>
   );

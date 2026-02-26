@@ -2,9 +2,9 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setMusicGenStatus, updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { generateBackgroundMusic } from '../services/aiService';
 import { Story } from '../types';
+import toast from 'react-hot-toast';
 
 interface BackgroundMusicGeneratorProps {
   story: Story;
@@ -17,20 +17,12 @@ const BackgroundMusicGenerator: React.FC<BackgroundMusicGeneratorProps> = ({ sto
 
   const handleGenerate = async () => {
     if (!story.music?.trim()) {
-      dispatch(showAlert({
-        title: 'Missing Music Prompt',
-        message: 'Please provide a music description before generating background music.',
-        type: 'warning'
-      }));
+      toast('Please provide a music description before generating background music.');
       return;
     }
 
     if (!config.comfy.endpoint?.trim()) {
-      dispatch(showAlert({
-        title: 'ComfyUI Not Configured',
-        message: 'Set a ComfyUI endpoint in Settings to generate background music.',
-        type: 'error'
-      }));
+      toast.error('Set a ComfyUI endpoint in Settings to generate background music.');
       return;
     }
 
@@ -39,19 +31,11 @@ const BackgroundMusicGenerator: React.FC<BackgroundMusicGeneratorProps> = ({ sto
       const musicUrl = await generateBackgroundMusic(config, story);
       await dispatch(updateStoryRemote({ ...story, music_url: musicUrl }));
       dispatch(setMusicGenStatus({ id: story.id, status: 'idle' }));
-      dispatch(showAlert({
-        title: 'Success!',
-        message: 'Background music has been generated and saved.',
-        type: 'success'
-      }));
+      toast.success('Background music has been generated and saved.');
     } catch (error: any) {
       console.error(error);
       dispatch(setMusicGenStatus({ id: story.id, status: 'error' }));
-      dispatch(showAlert({
-        title: 'Music Generation Failed',
-        message: error.message || 'An unexpected error occurred during music generation.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'An unexpected error occurred during music generation.');
     }
   };
 

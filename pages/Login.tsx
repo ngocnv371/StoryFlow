@@ -2,11 +2,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { showAlert } from '../store/uiSlice';
+import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
-  const dispatch = useDispatch();
   const [email, setEmail] = useState('ngocnv371@gmail.com');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -27,11 +25,7 @@ const Login: React.FC = () => {
         if (error) {
           setError(error.message);
         } else {
-          dispatch(showAlert({
-            title: 'Account Created',
-            message: 'Please check your email for a confirmation link to activate your account.',
-            type: 'success'
-          }));
+          toast.success('Please check your email for a confirmation link to activate your account.');
           setIsSignUp(false);
         }
       } else {

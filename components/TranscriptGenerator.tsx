@@ -3,9 +3,9 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setTranscriptGenStatus, updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { extendStoryTranscript, generateStoryTranscript } from '../services/aiService';
 import { Story } from '../types';
+import toast from 'react-hot-toast';
 
 interface TranscriptGeneratorProps {
   story: Story;
@@ -19,11 +19,7 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
 
   const handleGenerate = async () => {
     if (!story.title || !story.summary) {
-      dispatch(showAlert({
-        title: 'Information Required',
-        message: 'Please provide at least a title and a summary before generating a transcript.',
-        type: 'warning'
-      }));
+      toast('Please provide at least a title and a summary before generating a transcript.');
       return;
     }
 
@@ -41,29 +37,17 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
       }
       
       dispatch(setTranscriptGenStatus({ id: story.id, status: 'idle' }));
-      dispatch(showAlert({
-        title: 'Magic Happens!',
-        message: 'Your story transcript has been conjured.',
-        type: 'success'
-      }));
+      toast.success('Your story transcript has been conjured.');
     } catch (error: any) {
       console.error(error);
       dispatch(setTranscriptGenStatus({ id: story.id, status: 'error' }));
-      dispatch(showAlert({
-        title: 'Transcript Error',
-        message: error.message || 'Failed to generate transcript. Check your API settings.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Failed to generate transcript. Check your API settings.');
     }
   };
 
   const handleExtend = async () => {
     if (!story.transcript?.trim()) {
-      dispatch(showAlert({
-        title: 'Transcript Required',
-        message: 'Please generate or write a transcript first before extending it.',
-        type: 'warning'
-      }));
+      toast('Please generate or write a transcript first before extending it.');
       return;
     }
 
@@ -93,19 +77,11 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
       }
 
       dispatch(setTranscriptGenStatus({ id: story.id, status: 'idle' }));
-      dispatch(showAlert({
-        title: 'Transcript Extended',
-        message: 'The next part has been appended to your transcript.',
-        type: 'success'
-      }));
+      toast.success('The next part has been appended to your transcript.');
     } catch (error: any) {
       console.error(error);
       dispatch(setTranscriptGenStatus({ id: story.id, status: 'error' }));
-      dispatch(showAlert({
-        title: 'Extension Error',
-        message: error.message || 'Failed to extend transcript. Check your API settings.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Failed to extend transcript. Check your API settings.');
     }
   };
 

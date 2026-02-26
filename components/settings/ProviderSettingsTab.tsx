@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { setComfyConfig, setGeminiConfig, setYouTubeConfig } from '../../store/configSlice';
 import { authorizeYouTube } from '../../services/youtube';
-import { showAlert } from '../../store/uiSlice';
+import toast from 'react-hot-toast';
 
 const ProviderSettingsTab: React.FC = () => {
   const dispatch = useDispatch();
@@ -17,11 +17,7 @@ const ProviderSettingsTab: React.FC = () => {
 
   const handleAuthorizeYouTube = async () => {
     if (!config.youtube.clientId?.trim()) {
-      dispatch(showAlert({
-        title: 'YouTube Client ID Required',
-        message: 'Add your YouTube OAuth Client ID before authorizing.',
-        type: 'error',
-      }));
+      toast.error('Add your YouTube OAuth Client ID before authorizing.');
       return;
     }
 
@@ -34,17 +30,9 @@ const ProviderSettingsTab: React.FC = () => {
         accessTokenExpiresAt: token.accessTokenExpiresAt,
       }));
 
-      dispatch(showAlert({
-        title: 'YouTube Authorized',
-        message: 'Access token saved. Future uploads can reuse this authorization.',
-        type: 'success',
-      }));
+      toast.success('Access token saved. Future uploads can reuse this authorization.');
     } catch (error: any) {
-      dispatch(showAlert({
-        title: 'Authorization Failed',
-        message: error?.message || 'Could not authorize YouTube.',
-        type: 'error',
-      }));
+      toast.error(error?.message || 'Could not authorize YouTube.');
     } finally {
       setIsAuthorizingYouTube(false);
     }

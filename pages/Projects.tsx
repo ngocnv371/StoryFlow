@@ -5,8 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store';
 import { fetchStories, createStoryRemote } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
-import { showAlert } from '../store/uiSlice';
 import ProjectIdeasGenerator from '../components/ProjectIdeasGenerator';
+import toast from 'react-hot-toast';
 
 type StatusFilter = 'All' | 'Draft' | 'Pending' | 'Completed';
 
@@ -35,11 +35,7 @@ const Projects: React.FC = () => {
         navigate(`/projects/${resultAction.payload.id}`);
       }
     } catch (error: any) {
-      dispatch(showAlert({
-        title: 'Creation Failed',
-        message: 'Unable to create a new story at this time.',
-        type: 'error'
-      }));
+      toast.error('Unable to create a new story at this time.');
     } finally {
       setIsCreating(false);
     }

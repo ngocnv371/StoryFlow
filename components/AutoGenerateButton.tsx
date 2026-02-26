@@ -9,11 +9,11 @@ import {
   setVideoGenStatus,
   updateStoryRemote,
 } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { Story } from '../types';
 import { generateAudioSpeech, generateBackgroundMusic, generateCoverImage, generateStoryTranscript, uploadVideoToSupabase } from '../services/aiService';
 import { compileStoryVideo } from '../services/encoder-webm';
 import { resolveStoryConfig } from '../services/storyMetadata';
+import toast from 'react-hot-toast';
 
 interface AutoGenerationOptions {
   transcript: boolean;
@@ -172,11 +172,7 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
 
       currentStage = null;
 
-      dispatch(showAlert({
-        title: 'Automation Complete',
-        message: 'Selected generation steps completed successfully.',
-        type: 'success',
-      }));
+      toast.success('Selected generation steps completed successfully.');
     } catch (error: any) {
       if (currentStage === 'transcript') {
         dispatch(setTranscriptGenStatus({ id: nextStory.id, status: 'error' }));
@@ -194,11 +190,7 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         dispatch(setVideoGenStatus({ id: nextStory.id, status: 'error' }));
       }
 
-      dispatch(showAlert({
-        title: 'Automation Failed',
-        message: error?.message || 'An error occurred while running the generation pipeline.',
-        type: 'error',
-      }));
+      toast.error(error?.message || 'An error occurred while running the generation pipeline.');
     } finally {
       setAutoGeneratingStep('');
       setIsAutoGenerating(false);

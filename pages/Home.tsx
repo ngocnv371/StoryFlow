@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store';
 import { createStoryRemote, fetchStories } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
-import { showAlert } from '../store/uiSlice';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import toast from 'react-hot-toast';
 
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -43,11 +43,7 @@ const Home: React.FC = () => {
         navigate(`/projects/${resultAction.payload.id}`);
       }
     } catch (error: any) {
-      dispatch(showAlert({
-        title: 'Error',
-        message: 'Could not start a new project.',
-        type: 'error'
-      }));
+      toast.error('Could not start a new project.');
     } finally {
       setIsCreating(false);
     }

@@ -2,13 +2,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import configReducer, { saveConfigToStorage } from './configSlice';
 import storiesReducer from './storiesSlice';
-import uiReducer from './uiSlice';
 
 export const store = configureStore({
   reducer: {
     config: configReducer,
     stories: storiesReducer,
-    ui: uiReducer,
   },
 });
 

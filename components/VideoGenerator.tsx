@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setVideoGenStatus, updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { setYouTubeConfig } from '../store/configSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
 import { uploadVideoToSupabase } from '../services/aiService';
@@ -10,6 +9,7 @@ import { Story } from '../types';
 import { downloadVideo } from '@/services/util';
 import { uploadVideoToYouTube } from '../services/youtube';
 import { resolveStoryConfig } from '../services/storyMetadata';
+import toast from 'react-hot-toast';
 
 interface VideoGeneratorProps {
   story: Story;
@@ -32,12 +32,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
     if (videoBlob) {
       const filename = `${story.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_video.webm`;
       downloadVideo(videoBlob, filename);
-      
-      dispatch(showAlert({
-        title: 'Video Downloaded!',
-        message: 'Your story video has been downloaded in WebM format with VP9 codec.',
-        type: 'success'
-      }));
+
+      toast.success('Video downloaded in WebM format with VP9 codec.');
     }
   };
 
@@ -48,19 +44,11 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
     try {
       const videoUrl = await uploadVideoToSupabase(story.id, videoBlob);
       await dispatch(updateStoryRemote({ ...story, video_url: videoUrl }));
-      
-      dispatch(showAlert({
-        title: 'Video Saved!',
-        message: 'Your story video has been saved to Supabase storage.',
-        type: 'success'
-      }));
+
+      toast.success('Video saved to Supabase storage.');
     } catch (error: any) {
       console.error('Video save error:', error);
-      dispatch(showAlert({
-        title: 'Save Failed',
-        message: error.message || 'Failed to save video to storage.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Failed to save video to storage.');
     } finally {
       setIsSaving(false);
     }
@@ -70,11 +58,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
     if (!videoBlob) return;
 
     if (!youtubeConfig.clientId?.trim()) {
-      dispatch(showAlert({
-        title: 'YouTube Not Configured',
-        message: 'Add your YouTube OAuth Client ID in Settings > Provider > YouTube Upload before posting.',
-        type: 'error'
-      }));
+      toast.error('Add your YouTube OAuth Client ID in Settings > Provider > YouTube Upload before posting.');
       return;
     }
 
@@ -91,18 +75,10 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         onTokenRefresh: (token) => dispatch(setYouTubeConfig(token)),
       });
 
-      dispatch(showAlert({
-        title: 'Posted to YouTube!',
-        message: `Upload complete: ${uploadResult.url}`,
-        type: 'success'
-      }));
+      toast.success(`Upload complete: ${uploadResult.url}`);
     } catch (error: any) {
       console.error('YouTube upload error:', error);
-      dispatch(showAlert({
-        title: 'YouTube Upload Failed',
-        message: error.message || 'Failed to upload video to YouTube.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Failed to upload video to YouTube.');
     } finally {
       setIsPostingToYouTube(false);
     }
@@ -110,20 +86,12 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
 
   const handleCompile = async () => {
     if (!story.thumbnail_url) {
-      dispatch(showAlert({
-        title: 'Cover Art Required',
-        message: 'Please generate a cover photo first before compiling the video.',
-        type: 'error'
-      }));
+      toast.error('Please generate a cover photo first before compiling the video.');
       return;
     }
 
     if (!story.audio_url) {
-      dispatch(showAlert({
-        title: 'Audio Required',
-        message: 'Please generate audio first before compiling the video.',
-        type: 'error'
-      }));
+      toast.error('Please generate audio first before compiling the video.');
       return;
     }
 
@@ -154,12 +122,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       setVideoPreviewUrl(previewUrl);
       
       dispatch(setVideoGenStatus({ id: story.id, status: 'idle' }));
-      
-      dispatch(showAlert({
-        title: 'Video Compiled!',
-        message: 'Preview your video below. You can save it to the cloud or download it locally.',
-        type: 'success'
-      }));
+
+      toast.success('Video compiled. Preview it below, then save to cloud or download.');
       
     } catch (error: any) {
       console.error(error);
@@ -171,12 +135,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       if (error.message?.includes('VideoEncoder API is not available')) {
         errorMessage = 'Your browser doesn\'t support advanced video encoding. Please use Chrome 94+, Edge 94+, or another modern browser.';
       }
-      
-      dispatch(showAlert({
-        title: 'Video Compilation Failed',
-        message: errorMessage,
-        type: 'error'
-      }));
+
+      toast.error(errorMessage);
     } finally {
       setProgress(0);
     }

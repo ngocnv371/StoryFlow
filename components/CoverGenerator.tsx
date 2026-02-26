@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { setImageGenStatus, updateStoryRemote } from '../store/storiesSlice';
-import { showAlert } from '../store/uiSlice';
 import { generateCoverImage, constructImagePrompt } from '../services/aiService';
 import { Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
+import toast from 'react-hot-toast';
 
 interface CoverGeneratorProps {
   story: Story;
@@ -30,11 +30,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
     } catch (error: any) {
       console.error(error);
       dispatch(setImageGenStatus({ id: story.id, status: 'error' }));
-      dispatch(showAlert({
-        title: 'Art Generation Failed',
-        message: error.message || 'Check your Gemini API key in settings.',
-        type: 'error'
-      }));
+      toast.error(error.message || 'Check your Gemini API key in settings.');
     }
   };
 

@@ -13,6 +13,7 @@ import CoverSection from "../components/story-detail/CoverSection";
 import MusicSection from "../components/story-detail/MusicSection";
 import TagsSection from "../components/story-detail/TagsSection";
 import TranscriptSection from "../components/story-detail/TranscriptSection";
+import toast from "react-hot-toast";
 
 const StoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,9 +26,6 @@ const StoryDetail: React.FC = () => {
   const [formData, setFormData] = useState<Story | null>(null);
   const [isLoadingStory, setIsLoadingStory] = useState(false);
   const [storyLoadFailed, setStoryLoadFailed] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
-  );
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   useEffect(() => {
@@ -75,10 +73,12 @@ const StoryDetail: React.FC = () => {
   if (!formData) return <div className="p-8">Loading Story...</div>;
 
   const handleSave = async () => {
-    setSaveStatus("saving");
-    await dispatch(updateStoryRemote(formData));
-    setSaveStatus("saved");
-    setTimeout(() => setSaveStatus("idle"), 2000);
+    try {
+      await dispatch(updateStoryRemote(formData)).unwrap();
+      toast.success("Saved!");
+    } catch {
+      toast.error("Failed to save story");
+    }
   };
 
   const handleUpdate = (updates: Partial<Story>) => {
@@ -122,11 +122,6 @@ const StoryDetail: React.FC = () => {
             </select>
           </div>
           <AutoGenerateButton story={formData} onStoryUpdated={setFormData} />
-          <span
-            className={`text-sm text-emerald-600 font-medium transition-opacity ${saveStatus === "saved" ? "opacity-100" : "opacity-0"}`}
-          >
-            Saved!
-          </span>
           <button
             onClick={handleSave}
             className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg"
