@@ -257,7 +257,7 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, audio: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Audio</span>
+                <span className="font-medium text-slate-700">Narration</span>
               </label>
 
               <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
