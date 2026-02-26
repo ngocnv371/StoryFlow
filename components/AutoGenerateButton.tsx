@@ -138,7 +138,7 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         dispatch(setMusicGenStatus({ id: nextStory.id, status: 'idle' }));
       }
 
-      const shouldGenerateVideo = autoGenerationOptions.video || !nextStory.video_url?.trim();
+      const shouldGenerateVideo = autoGenerationOptions.video;
       if (shouldGenerateVideo) {
         currentStage = 'video';
         if (!nextStory.thumbnail_url?.trim()) {
@@ -163,9 +163,6 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
             enableParticles: videoConfig.video.enableParticles,
           }
         );
-        const videoUrl = await uploadVideoToSupabase(nextStory.id, videoBlob);
-        nextStory = { ...nextStory, video_url: videoUrl };
-        await updateStoryLocallyAndRemotely(nextStory);
 
         dispatch(setVideoGenStatus({ id: nextStory.id, status: 'idle' }));
       }

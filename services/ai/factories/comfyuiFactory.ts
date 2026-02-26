@@ -368,6 +368,7 @@ function createMusicWorkflow(story: Story): Record<string, any> {
   const workflow = JSON.parse(JSON.stringify(comfyMusicWorkflow));
   const musicPrompt = story.music?.trim() || `Cinematic ambient score inspired by: ${story.title}. ${story.summary}`;
   workflow['94'].inputs.tags = musicPrompt;
+  workflow['94'].inputs.duration = story.duration;
   workflow['98'].inputs.seconds = story.duration;
   return workflow;
 }
