@@ -6,7 +6,7 @@ import { fetchStoryById, updateStoryRemote } from "../store/storiesSlice";
 import { Story } from "../types";
 import ImageInspector from "../components/ImageInspector";
 import AutoGenerateButton from "../components/AutoGenerateButton";
-import StorySummarySection from "../components/story-detail/StoryMetaSection";
+import StorySummarySection from "../components/story-detail/StorySummarySection";
 import VideoSection from "../components/story-detail/VideoSection";
 import NarrationSection from "../components/story-detail/NarrationSection";
 import CoverSection from "../components/story-detail/CoverSection";
