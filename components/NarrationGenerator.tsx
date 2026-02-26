@@ -6,6 +6,7 @@ import { setAudioGenStatus, updateStoryRemote } from '../store/storiesSlice';
 import { showAlert } from '../store/uiSlice';
 import { generateAudioSpeech } from '../services/aiService';
 import { Story } from '../types';
+import { resolveStoryConfig } from '../services/storyMetadata';
 
 interface NarrationGeneratorProps {
   story: Story;
@@ -14,6 +15,7 @@ interface NarrationGeneratorProps {
 const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
   const config = useSelector((state: RootState) => state.config);
+  const effectiveConfig = resolveStoryConfig(config, story);
   const status = useSelector((state: RootState) => state.stories.audioGenerationStatuses[story.id] || 'idle');
 
   const handleGenerate = async () => {
@@ -28,7 +30,7 @@ const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
 
     dispatch(setAudioGenStatus({ id: story.id, status: 'generating' }));
     try {
-      const narration = await generateAudioSpeech(config, story);
+      const narration = await generateAudioSpeech(effectiveConfig, story);
       await dispatch(updateStoryRemote({ ...story, audio_url: narration.url, duration: narration.duration }));
       dispatch(setAudioGenStatus({ id: story.id, status: 'idle' }));
       dispatch(showAlert({

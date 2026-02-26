@@ -4,7 +4,7 @@ export interface Story {
   user_id: string;
   title: string;
   summary: string;
-  metadata?: Record<string, unknown>;
+  metadata?: StoryMetadata;
   tags: string[];
   transcript: string;
   cover_prompt?: string;
@@ -17,6 +17,17 @@ export interface Story {
   duration?: number;
   music_url?: string;
   video_url?: string;
+}
+
+export interface StoryGenerationOverrides {
+  cover?: Pick<ImageGenConfig, 'width' | 'height'>;
+  narration?: Pick<AudioGenConfig, 'voice' | 'speed'>;
+  video?: Partial<VideoGenConfig>;
+}
+
+export interface StoryMetadata {
+  generationOverrides?: StoryGenerationOverrides;
+  [key: string]: unknown;
 }
 
 export type AIProvider = 'gemini' | 'comfyui';

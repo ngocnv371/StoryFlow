@@ -9,6 +9,7 @@ import { uploadVideoToSupabase } from '../services/aiService';
 import { Story } from '../types';
 import { downloadVideo } from '@/services/util';
 import { uploadVideoToYouTube } from '../services/youtube';
+import { resolveStoryConfig } from '../services/storyMetadata';
 
 interface VideoGeneratorProps {
   story: Story;
@@ -18,7 +19,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const dispatch = useDispatch<AppDispatch>();
   const status = useSelector((state: RootState) => state.stories.videoGenerationStatuses[story.id] || 'idle');
   const youtubeConfig = useSelector((state: RootState) => state.config.youtube);
-  const videoConfig = useSelector((state: RootState) => state.config.video);
+  const appConfig = useSelector((state: RootState) => state.config);
+  const effectiveConfig = resolveStoryConfig(appConfig, story);
   const [showTooltip, setShowTooltip] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
@@ -135,8 +137,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         story.music_url,
         (progressValue) => setProgress(Math.round(progressValue * 100)),
         {
-          enableKenBurns: videoConfig.enableKenBurns,
-          enableParticles: videoConfig.enableParticles,
+          enableKenBurns: effectiveConfig.video.enableKenBurns,
+          enableParticles: effectiveConfig.video.enableParticles,
         }
       );
       

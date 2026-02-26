@@ -1,6 +1,9 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import CoverGenerator from '../CoverGenerator';
 import { Story } from '../../types';
+import { RootState } from '../../store';
+import { getStoryGenerationOverrides, resolveStoryConfig, withStoryGenerationOverrides } from '../../services/storyMetadata';
 
 interface CoverSectionProps {
   story: Story;
@@ -9,9 +12,72 @@ interface CoverSectionProps {
 }
 
 const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInspector }) => {
+  const config = useSelector((state: RootState) => state.config);
+  const storyConfig = resolveStoryConfig(config, story);
+  const generationOverrides = getStoryGenerationOverrides(story);
+
+  const handleCoverSizeChange = (key: 'width' | 'height', rawValue: string) => {
+    const parsedValue = rawValue === '' ? undefined : Number(rawValue);
+    const safeValue = typeof parsedValue === 'number' && Number.isFinite(parsedValue) && parsedValue > 0
+      ? Math.round(parsedValue)
+      : undefined;
+
+    onUpdate({
+      metadata: withStoryGenerationOverrides(story, {
+        ...generationOverrides,
+        cover: {
+          ...generationOverrides.cover,
+          [key]: safeValue,
+        },
+      }),
+    });
+  };
+
+  const handleResetCoverOverrides = () => {
+    onUpdate({
+      metadata: withStoryGenerationOverrides(story, {
+        ...generationOverrides,
+        cover: {},
+      }),
+    });
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
-      <h3 className="font-bold text-slate-800">Cover</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-slate-800">Cover</h3>
+        <button
+          type="button"
+          onClick={handleResetCoverOverrides}
+          className="text-xs text-indigo-600 font-semibold hover:text-indigo-700"
+        >
+          Reset Cover Size
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border">
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Width</label>
+          <input
+            type="number"
+            min={1}
+            value={storyConfig.imageGen.width ?? ''}
+            onChange={(event) => handleCoverSizeChange('width', event.target.value)}
+            className="w-full p-2 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Height</label>
+          <input
+            type="number"
+            min={1}
+            value={storyConfig.imageGen.height ?? ''}
+            onChange={(event) => handleCoverSizeChange('height', event.target.value)}
+            className="w-full p-2 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          />
+        </div>
+      </div>
+
       <div>
         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cover Prompt</label>
         <textarea

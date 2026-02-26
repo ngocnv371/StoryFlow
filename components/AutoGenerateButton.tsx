@@ -13,6 +13,7 @@ import { showAlert } from '../store/uiSlice';
 import { Story } from '../types';
 import { generateAudioSpeech, generateBackgroundMusic, generateCoverImage, generateStoryTranscript, uploadVideoToSupabase } from '../services/aiService';
 import { compileStoryVideo } from '../services/encoder-webm';
+import { resolveStoryConfig } from '../services/storyMetadata';
 
 interface AutoGenerationOptions {
   transcript: boolean;
@@ -91,7 +92,8 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         setAutoGeneratingStep('Generating cover...');
         dispatch(setImageGenStatus({ id: nextStory.id, status: 'generating' }));
 
-        const imageUrl = await generateCoverImage(config, nextStory);
+        const coverConfig = resolveStoryConfig(config, nextStory);
+        const imageUrl = await generateCoverImage(coverConfig, nextStory);
         nextStory = { ...nextStory, thumbnail_url: imageUrl };
         await updateStoryLocallyAndRemotely(nextStory);
 
@@ -108,7 +110,8 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         setAutoGeneratingStep('Generating audio...');
         dispatch(setAudioGenStatus({ id: nextStory.id, status: 'generating' }));
 
-        const narration = await generateAudioSpeech(config, nextStory);
+        const narrationConfig = resolveStoryConfig(config, nextStory);
+        const narration = await generateAudioSpeech(narrationConfig, nextStory);
         nextStory = { ...nextStory, audio_url: narration.url, duration: narration.duration };
         await updateStoryLocallyAndRemotely(nextStory);
 
@@ -148,14 +151,16 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         setAutoGeneratingStep('Compiling and saving video...');
         dispatch(setVideoGenStatus({ id: nextStory.id, status: 'generating' }));
 
+        const videoConfig = resolveStoryConfig(config, nextStory);
+
         const videoBlob = await compileStoryVideo(
           nextStory.thumbnail_url,
           nextStory.audio_url,
           nextStory.music_url,
           () => undefined,
           {
-            enableKenBurns: config.video.enableKenBurns,
-            enableParticles: config.video.enableParticles,
+            enableKenBurns: videoConfig.video.enableKenBurns,
+            enableParticles: videoConfig.video.enableParticles,
           }
         );
         const videoUrl = await uploadVideoToSupabase(nextStory.id, videoBlob);

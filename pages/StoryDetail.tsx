@@ -155,7 +155,7 @@ const StoryDetail: React.FC = () => {
 
         <div className="lg:col-span-2 space-y-6">
           <TranscriptSection story={formData} onUpdate={handleUpdate} />
-          <VideoSection story={formData} />
+          <VideoSection story={formData} onUpdate={handleUpdate} />
         </div>
       </div>
       <ImageInspector
