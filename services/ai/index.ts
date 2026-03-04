@@ -1,6 +1,7 @@
 import { AppConfig, Story } from '../../types';
 import { ComfyUIAIGenerationFactory } from './factories/comfyuiFactory';
 import { GeminiAIGenerationFactory } from './factories/geminiFactory';
+import { OpenAICompatibleAIGenerationFactory } from './factories/openAICompatibleFactory';
 import { constructImagePrompt } from './prompts';
 import { uploadVideoToSupabase } from './storage';
 import { AIGenerationFactory, AIProviderFactoryType, GeneratedAudio, GeneratedStoryText } from './types';
@@ -11,6 +12,10 @@ export { constructImagePrompt, uploadVideoToSupabase };
 export const createAIGenerationFactory = (provider: AIProviderFactoryType = 'gemini'): AIGenerationFactory => {
   if (provider === 'comfyui') {
     return new ComfyUIAIGenerationFactory();
+  }
+
+  if (provider === 'openai-compatible') {
+    return new OpenAICompatibleAIGenerationFactory();
   }
 
   return new GeminiAIGenerationFactory();
@@ -38,7 +43,12 @@ export const generateStoryTranscript = async (
   config: AppConfig,
   storyDetails: Story
 ): Promise<GeneratedStoryText> => {
-  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const provider: AIProviderFactoryType =
+    config.generationProviders.text === 'openai-compatible'
+      ? 'openai-compatible'
+      : config.generationProviders.text === 'comfyui'
+        ? 'comfyui'
+        : 'gemini';
   const factory = createAIGenerationFactory(provider);
   return await factory.generateText(config, storyDetails);
 };
@@ -48,7 +58,12 @@ export const extendStoryTranscript = async (
   tags: string[],
   transcript: string
 ): Promise<string> => {
-  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const provider: AIProviderFactoryType =
+    config.generationProviders.text === 'openai-compatible'
+      ? 'openai-compatible'
+      : config.generationProviders.text === 'comfyui'
+        ? 'comfyui'
+        : 'gemini';
   const factory = createAIGenerationFactory(provider);
   return await factory.extendTranscript(config, tags, transcript);
 };
@@ -57,7 +72,12 @@ export const generateProjectIdeas = async (
   config: AppConfig,
   theme: string
 ): Promise<string[]> => {
-  const provider: AIProviderFactoryType = config.generationProviders.text === 'comfyui' ? 'comfyui' : 'gemini';
+  const provider: AIProviderFactoryType =
+    config.generationProviders.text === 'openai-compatible'
+      ? 'openai-compatible'
+      : config.generationProviders.text === 'comfyui'
+        ? 'comfyui'
+        : 'gemini';
   const factory = createAIGenerationFactory(provider);
   return await factory.generateProjectIdeas(config, theme);
 };

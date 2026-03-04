@@ -30,7 +30,7 @@ export interface StoryMetadata {
   [key: string]: unknown;
 }
 
-export type AIProvider = 'gemini' | 'comfyui';
+export type AIProvider = 'gemini' | 'comfyui' | 'openai-compatible';
 export type GenerationType = 'text' | 'image' | 'narration' | 'music';
 
 export interface GenerationProviders {
@@ -51,6 +51,11 @@ export interface ComfyConfig {
   apiKey: string;
   endpoint?: string;
   model?: string;
+}
+
+export interface OpenAICompatibleConfig {
+  url: string;
+  token: string;
 }
 
 export interface AudioGenConfig {
@@ -86,6 +91,7 @@ export interface AppConfig {
   generationProviders: GenerationProviders;
   gemini: GeminiConfig;
   comfy: ComfyConfig;
+  openAICompatible: OpenAICompatibleConfig;
   audioGen: AudioGenConfig;
   imageGen: ImageGenConfig;
   video: VideoGenConfig;

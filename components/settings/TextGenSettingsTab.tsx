@@ -19,6 +19,7 @@ const TextGenSettingsTab: React.FC = () => {
         >
           <option value="gemini">Gemini</option>
           <option value="comfyui">ComfyUI</option>
+          <option value="openai-compatible">OpenAI compatible</option>
         </select>
       </div>
     </div>

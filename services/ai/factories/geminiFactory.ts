@@ -106,10 +106,6 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
         .filter((idea: string) => idea.length > 0)
         .slice(0, 10);
 
-      if (ideas.length !== 10) {
-        throw new Error('AI did not return exactly 10 valid ideas.');
-      }
-
       return ideas;
     } catch (error: any) {
       console.error('Project ideas generation error details:', error);

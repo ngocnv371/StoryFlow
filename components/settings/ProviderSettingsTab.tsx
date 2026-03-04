@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { setComfyConfig, setGeminiConfig, setYouTubeConfig } from '../../store/configSlice';
+import { setComfyConfig, setGeminiConfig, setOpenAICompatibleConfig, setYouTubeConfig } from '../../store/configSlice';
 import { authorizeYouTube } from '../../services/youtube';
 import toast from 'react-hot-toast';
 
@@ -120,6 +120,33 @@ const ProviderSettingsTab: React.FC = () => {
             value={config.comfy.model || ''}
             placeholder="Optional ComfyUI model name"
             onChange={(e) => dispatch(setComfyConfig({ model: e.target.value }))}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold text-slate-800">OpenAI compatible (Text only)</h3>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Base URL</label>
+          <input
+            type="text"
+            value={config.openAICompatible.url}
+            placeholder="https://api.openai.com/v1 or http://localhost:1234/v1"
+            onChange={(e) => dispatch(setOpenAICompatibleConfig({ url: e.target.value }))}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+          <p className="text-xs text-slate-500 mt-1">Supports OpenAI and LM Studio compatible chat completions endpoints.</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">API Token</label>
+          <input
+            type="password"
+            value={config.openAICompatible.token}
+            placeholder="Enter your OpenAI/LM Studio token"
+            onChange={(e) => dispatch(setOpenAICompatibleConfig({ token: e.target.value }))}
             className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>

@@ -1,6 +1,6 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, GeminiConfig, ComfyConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
@@ -21,6 +21,10 @@ const defaultState: AppConfig = {
     apiKey: '',
     endpoint: '',
     model: '',
+  },
+  openAICompatible: {
+    url: '',
+    token: '',
   },
   audioGen: {
     voice: 'Kore',
@@ -54,9 +58,13 @@ const loadConfigFromStorage = (): AppConfig => {
       return {
         generationProviders: {
           text: parsed.generationProviders?.text ?? parsed.textGen?.provider ?? defaultState.generationProviders.text,
-          image: parsed.generationProviders?.image ?? legacyProvider,
-          narration: parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration,
-          music: parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music,
+          image: (parsed.generationProviders?.image ?? legacyProvider) === 'openai-compatible' ? defaultState.generationProviders.image : parsed.generationProviders?.image ?? legacyProvider,
+          narration: (parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration) === 'openai-compatible'
+            ? defaultState.generationProviders.narration
+            : parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration,
+          music: (parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music) === 'openai-compatible'
+            ? defaultState.generationProviders.music
+            : parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music,
         },
         gemini: {
           ...defaultState.gemini,
@@ -72,6 +80,12 @@ const loadConfigFromStorage = (): AppConfig => {
           apiKey: parsed.comfy?.apiKey ?? parsed.imageGen?.apiKey ?? defaultState.comfy.apiKey,
           endpoint: parsed.comfy?.endpoint ?? parsed.imageGen?.endpoint ?? defaultState.comfy.endpoint,
           model: parsed.comfy?.model ?? defaultState.comfy.model,
+        },
+        openAICompatible: {
+          ...defaultState.openAICompatible,
+          ...parsed.openAICompatible,
+          url: parsed.openAICompatible?.url ?? defaultState.openAICompatible.url,
+          token: parsed.openAICompatible?.token ?? defaultState.openAICompatible.token,
         },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
         imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
@@ -104,6 +118,9 @@ const configSlice = createSlice({
   initialState,
   reducers: {
     setGenerationProvider: (state, action: PayloadAction<{ generationType: GenerationType; provider: AIProvider }>) => {
+      if (action.payload.provider === 'openai-compatible' && action.payload.generationType !== 'text') {
+        return;
+      }
       state.generationProviders[action.payload.generationType] = action.payload.provider;
     },
     setGeminiConfig: (state, action: PayloadAction<Partial<GeminiConfig>>) => {
@@ -111,6 +128,9 @@ const configSlice = createSlice({
     },
     setComfyConfig: (state, action: PayloadAction<Partial<ComfyConfig>>) => {
       state.comfy = { ...state.comfy, ...action.payload };
+    },
+    setOpenAICompatibleConfig: (state, action: PayloadAction<Partial<OpenAICompatibleConfig>>) => {
+      state.openAICompatible = { ...state.openAICompatible, ...action.payload };
     },
     setAudioGenConfig: (state, action: PayloadAction<Partial<AudioGenConfig>>) => {
       state.audioGen = { ...state.audioGen, ...action.payload };
@@ -127,5 +147,5 @@ const configSlice = createSlice({
   },
 });
 
-export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
+export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setOpenAICompatibleConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
 export default configSlice.reducer;
