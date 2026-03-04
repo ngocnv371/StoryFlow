@@ -19,6 +19,7 @@ const NarrationGenSettingsTab: React.FC = () => {
         >
           <option value="gemini">Gemini</option>
           <option value="comfyui">ComfyUI</option>
+          <option value="chatterbox">Chatterbox</option>
         </select>
       </div>
 
@@ -37,7 +38,7 @@ const NarrationGenSettingsTab: React.FC = () => {
           rel="noopener noreferrer"
           className="mt-1 inline-block text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
         >
-          View Gemini TTS voice options
+          {config.generationProviders.narration === 'chatterbox' ? 'Voice options depend on your Chatterbox endpoint' : 'View Gemini TTS voice options'}
         </a>
       </div>
 

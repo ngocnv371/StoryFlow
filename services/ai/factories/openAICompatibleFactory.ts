@@ -204,7 +204,7 @@ export class OpenAICompatibleAIGenerationFactory implements AIGenerationFactory 
     _story: Story,
   ): Promise<GeneratedAudio> {
     throw new Error(
-      "OpenAI compatible provider supports text only. Use Gemini or ComfyUI for narration.",
+      "OpenAI compatible provider supports text only. Use Gemini or Chatterbox for narration.",
     );
   }
 

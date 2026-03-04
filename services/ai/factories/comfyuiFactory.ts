@@ -440,7 +440,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
   }
 
   async generateAudio(_config: AppConfig, _story: Story): Promise<GeneratedAudio> {
-    throw new Error('ComfyUI provider does not support audio generation. Use Gemini provider for audio.');
+    throw new Error('ComfyUI provider does not support audio generation. Use Gemini or Chatterbox provider for audio.');
   }
 
   async generateMusic(config: AppConfig, story: Story): Promise<string> {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { setComfyConfig, setGeminiConfig, setOpenAICompatibleConfig, setYouTubeConfig } from '../../store/configSlice';
+import { setChatterboxConfig, setComfyConfig, setGeminiConfig, setOpenAICompatibleConfig, setYouTubeConfig } from '../../store/configSlice';
 import { authorizeYouTube } from '../../services/youtube';
 import toast from 'react-hot-toast';
 
@@ -149,6 +149,44 @@ const ProviderSettingsTab: React.FC = () => {
             onChange={(e) => dispatch(setOpenAICompatibleConfig({ token: e.target.value }))}
             className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold text-slate-800">Chatterbox (Narration only)</h3>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
+          <input
+            type="text"
+            value={config.chatterbox.endpoint}
+            placeholder="http://localhost:8000/tts"
+            onChange={(e) => dispatch(setChatterboxConfig({ endpoint: e.target.value }))}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">API Token</label>
+          <input
+            type="password"
+            value={config.chatterbox.token}
+            placeholder="Optional bearer token"
+            onChange={(e) => dispatch(setChatterboxConfig({ token: e.target.value }))}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Model</label>
+          <input
+            type="text"
+            value={config.chatterbox.model}
+            placeholder="chatterbox"
+            onChange={(e) => dispatch(setChatterboxConfig({ model: e.target.value }))}
+            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+          <p className="text-xs text-slate-500 mt-1">Narration requests send text, voice, speed, narrator, and model as JSON.</p>
         </div>
       </div>
 

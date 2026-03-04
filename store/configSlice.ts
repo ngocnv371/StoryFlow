@@ -1,6 +1,6 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, ChatterboxConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
@@ -25,6 +25,11 @@ const defaultState: AppConfig = {
   openAICompatible: {
     url: '',
     token: '',
+  },
+  chatterbox: {
+    endpoint: '',
+    token: '',
+    model: '',
   },
   audioGen: {
     voice: 'Kore',
@@ -57,14 +62,34 @@ const loadConfigFromStorage = (): AppConfig => {
       // Merge with defaults to ensure all fields exist
       return {
         generationProviders: {
-          text: parsed.generationProviders?.text ?? parsed.textGen?.provider ?? defaultState.generationProviders.text,
-          image: (parsed.generationProviders?.image ?? legacyProvider) === 'openai-compatible' ? defaultState.generationProviders.image : parsed.generationProviders?.image ?? legacyProvider,
-          narration: (parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration) === 'openai-compatible'
-            ? defaultState.generationProviders.narration
-            : parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration,
-          music: (parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music) === 'openai-compatible'
-            ? defaultState.generationProviders.music
-            : parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music,
+          text: (() => {
+            const provider = parsed.generationProviders?.text ?? parsed.textGen?.provider ?? defaultState.generationProviders.text;
+            if (provider === 'openai-compatible' || provider === 'gemini' || provider === 'comfyui') {
+              return provider;
+            }
+            return defaultState.generationProviders.text;
+          })(),
+          image: (() => {
+            const provider = parsed.generationProviders?.image ?? legacyProvider;
+            if (provider === 'gemini' || provider === 'comfyui') {
+              return provider;
+            }
+            return defaultState.generationProviders.image;
+          })(),
+          narration: (() => {
+            const provider = parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration;
+            if (provider === 'gemini' || provider === 'comfyui' || provider === 'chatterbox') {
+              return provider;
+            }
+            return defaultState.generationProviders.narration;
+          })(),
+          music: (() => {
+            const provider = parsed.generationProviders?.music ?? parsed.musicGen?.provider ?? defaultState.generationProviders.music;
+            if (provider === 'gemini' || provider === 'comfyui') {
+              return provider;
+            }
+            return defaultState.generationProviders.music;
+          })(),
         },
         gemini: {
           ...defaultState.gemini,
@@ -86,6 +111,13 @@ const loadConfigFromStorage = (): AppConfig => {
           ...parsed.openAICompatible,
           url: parsed.openAICompatible?.url ?? defaultState.openAICompatible.url,
           token: parsed.openAICompatible?.token ?? defaultState.openAICompatible.token,
+        },
+        chatterbox: {
+          ...defaultState.chatterbox,
+          ...parsed.chatterbox,
+          endpoint: parsed.chatterbox?.endpoint ?? defaultState.chatterbox.endpoint,
+          token: parsed.chatterbox?.token ?? defaultState.chatterbox.token,
+          model: parsed.chatterbox?.model ?? defaultState.chatterbox.model,
         },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
         imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
@@ -121,6 +153,9 @@ const configSlice = createSlice({
       if (action.payload.provider === 'openai-compatible' && action.payload.generationType !== 'text') {
         return;
       }
+      if (action.payload.provider === 'chatterbox' && action.payload.generationType !== 'narration') {
+        return;
+      }
       state.generationProviders[action.payload.generationType] = action.payload.provider;
     },
     setGeminiConfig: (state, action: PayloadAction<Partial<GeminiConfig>>) => {
@@ -131,6 +166,9 @@ const configSlice = createSlice({
     },
     setOpenAICompatibleConfig: (state, action: PayloadAction<Partial<OpenAICompatibleConfig>>) => {
       state.openAICompatible = { ...state.openAICompatible, ...action.payload };
+    },
+    setChatterboxConfig: (state, action: PayloadAction<Partial<ChatterboxConfig>>) => {
+      state.chatterbox = { ...state.chatterbox, ...action.payload };
     },
     setAudioGenConfig: (state, action: PayloadAction<Partial<AudioGenConfig>>) => {
       state.audioGen = { ...state.audioGen, ...action.payload };
@@ -147,5 +185,5 @@ const configSlice = createSlice({
   },
 });
 
-export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setOpenAICompatibleConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
+export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setOpenAICompatibleConfig, setChatterboxConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
 export default configSlice.reducer;

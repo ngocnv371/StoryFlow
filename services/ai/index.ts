@@ -1,4 +1,5 @@
 import { AppConfig, Story } from '../../types';
+import { ChatterboxAIGenerationFactory } from './factories/chatterboxFactory';
 import { ComfyUIAIGenerationFactory } from './factories/comfyuiFactory';
 import { GeminiAIGenerationFactory } from './factories/geminiFactory';
 import { OpenAICompatibleAIGenerationFactory } from './factories/openAICompatibleFactory';
@@ -18,6 +19,10 @@ export const createAIGenerationFactory = (provider: AIProviderFactoryType = 'gem
     return new OpenAICompatibleAIGenerationFactory();
   }
 
+  if (provider === 'chatterbox') {
+    return new ChatterboxAIGenerationFactory();
+  }
+
   return new GeminiAIGenerationFactory();
 };
 
@@ -28,7 +33,12 @@ export const generateCoverImage = async (config: AppConfig, story: Story): Promi
 };
 
 export const generateAudioSpeech = async (config: AppConfig, story: Story): Promise<GeneratedAudio> => {
-  const provider: AIProviderFactoryType = config.generationProviders.narration === 'comfyui' ? 'comfyui' : 'gemini';
+  const provider: AIProviderFactoryType =
+    config.generationProviders.narration === 'chatterbox'
+      ? 'chatterbox'
+      : config.generationProviders.narration === 'comfyui'
+        ? 'comfyui'
+        : 'gemini';
   const factory = createAIGenerationFactory(provider);
   return await factory.generateAudio(config, story);
 };

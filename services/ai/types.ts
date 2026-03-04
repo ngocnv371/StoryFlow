@@ -1,6 +1,6 @@
 import { AppConfig, Story } from '../../types';
 
-export type AIProviderFactoryType = 'gemini' | 'comfyui' | 'openai-compatible';
+export type AIProviderFactoryType = 'gemini' | 'comfyui' | 'openai-compatible' | 'chatterbox';
 
 export type GeneratedStoryText = Pick<Story, 'title' | 'transcript' | 'narrator' | 'music' | 'cover_prompt' | 'tags'>;
 export type GeneratedAudio = {
