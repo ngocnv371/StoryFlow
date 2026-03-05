@@ -11,7 +11,7 @@ StoryFlow is an authenticated AI storytelling studio for creating and managing s
 - compile a final video
 - save media to Supabase storage and optionally post to YouTube
 
-It uses Supabase for auth/data/storage, Redux for app state, and pluggable generation providers (Gemini + ComfyUI + OpenAI compatible + Chatterbox).
+It uses Supabase for auth/data/storage, Redux for app state, and pluggable generation providers (Gemini + ComfyUI + OpenAI compatible + Chatterbox + Kokoro).
 
 ## Current Features
 
@@ -59,12 +59,12 @@ It uses Supabase for auth/data/storage, Redux for app state, and pluggable gener
 
 ## Provider Capability Matrix
 
-| Generation type | Gemini | ComfyUI | OpenAI compatible | Chatterbox |
-| --- | --- | --- | --- | --- |
-| Text / transcript / ideas | ✅ | ❌ | ✅ | ❌ |
-| Cover image | ✅ | ✅ | ❌ | ❌ |
-| Narration audio | ✅ | ❌ | ❌ | ✅ |
-| Background music | ❌ | ✅ | ❌ | ❌ |
+| Generation type | Gemini | ComfyUI | OpenAI compatible | Chatterbox | Kokoro |
+| --- | --- | --- | --- | --- | --- |
+| Text / transcript / ideas | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Cover image | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Narration audio | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Background music | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 If you set an unsupported provider for a generation type, StoryFlow will surface an error in the UI.
 
@@ -77,6 +77,7 @@ If you set an unsupported provider for a generation type, StoryFlow will surface
 - A Gemini API key (required for text and narration, optional for image if using ComfyUI)
 - A ComfyUI endpoint (required for music, optional for image)
 - A Chatterbox endpoint (optional, for narration if selected)
+- A Kokoro endpoint (optional, for narration if selected)
 
 ### 1) Install dependencies
 
@@ -116,6 +117,7 @@ Then open the local Vite URL (usually `http://localhost:5173`).
    - paste Gemini API key
    - set ComfyUI endpoint if using Comfy-based generation
    - set Chatterbox endpoint if using Chatterbox narration
+   - set Kokoro endpoint if using Kokoro narration
 4. In generation tabs, choose provider per task type.
 5. Create a new project from **Overview** or **Projects**.
 

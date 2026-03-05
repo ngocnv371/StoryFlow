@@ -1,6 +1,6 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, ChatterboxConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
+import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, ChatterboxConfig, KokoroConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
 
 const STORAGE_KEY = 'storyflow_config';
 
@@ -30,6 +30,10 @@ const defaultState: AppConfig = {
     endpoint: '',
     token: '',
     model: '',
+  },
+  kokoro: {
+    endpoint: 'http://localhost:5000/predictions',
+    token: '',
   },
   audioGen: {
     voice: 'Kore',
@@ -78,7 +82,7 @@ const loadConfigFromStorage = (): AppConfig => {
           })(),
           narration: (() => {
             const provider = parsed.generationProviders?.narration ?? parsed.audioGen?.provider ?? defaultState.generationProviders.narration;
-            if (provider === 'gemini' || provider === 'comfyui' || provider === 'chatterbox') {
+            if (provider === 'gemini' || provider === 'comfyui' || provider === 'chatterbox' || provider === 'kokoro') {
               return provider;
             }
             return defaultState.generationProviders.narration;
@@ -119,6 +123,12 @@ const loadConfigFromStorage = (): AppConfig => {
           token: parsed.chatterbox?.token ?? defaultState.chatterbox.token,
           model: parsed.chatterbox?.model ?? defaultState.chatterbox.model,
         },
+        kokoro: {
+          ...defaultState.kokoro,
+          ...parsed.kokoro,
+          endpoint: parsed.kokoro?.endpoint ?? defaultState.kokoro.endpoint,
+          token: parsed.kokoro?.token ?? defaultState.kokoro.token,
+        },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
         imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
         video: { ...defaultState.video, ...parsed.video },
@@ -156,6 +166,9 @@ const configSlice = createSlice({
       if (action.payload.provider === 'chatterbox' && action.payload.generationType !== 'narration') {
         return;
       }
+      if (action.payload.provider === 'kokoro' && action.payload.generationType !== 'narration') {
+        return;
+      }
       state.generationProviders[action.payload.generationType] = action.payload.provider;
     },
     setGeminiConfig: (state, action: PayloadAction<Partial<GeminiConfig>>) => {
@@ -169,6 +182,9 @@ const configSlice = createSlice({
     },
     setChatterboxConfig: (state, action: PayloadAction<Partial<ChatterboxConfig>>) => {
       state.chatterbox = { ...state.chatterbox, ...action.payload };
+    },
+    setKokoroConfig: (state, action: PayloadAction<Partial<KokoroConfig>>) => {
+      state.kokoro = { ...state.kokoro, ...action.payload };
     },
     setAudioGenConfig: (state, action: PayloadAction<Partial<AudioGenConfig>>) => {
       state.audioGen = { ...state.audioGen, ...action.payload };
@@ -185,5 +201,5 @@ const configSlice = createSlice({
   },
 });
 
-export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setOpenAICompatibleConfig, setChatterboxConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
+export const { setGenerationProvider, setGeminiConfig, setComfyConfig, setOpenAICompatibleConfig, setChatterboxConfig, setKokoroConfig, setAudioGenConfig, setImageGenConfig, setVideoGenConfig, setYouTubeConfig } = configSlice.actions;
 export default configSlice.reducer;

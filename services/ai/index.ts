@@ -2,6 +2,7 @@ import { AppConfig, Story } from '../../types';
 import { ChatterboxAIGenerationFactory } from './factories/chatterboxFactory';
 import { ComfyUIAIGenerationFactory } from './factories/comfyuiFactory';
 import { GeminiAIGenerationFactory } from './factories/geminiFactory';
+import { KokoroAIGenerationFactory } from './factories/kokoroFactory';
 import { OpenAICompatibleAIGenerationFactory } from './factories/openAICompatibleFactory';
 import { constructImagePrompt } from './prompts';
 import { uploadVideoToSupabase } from './storage';
@@ -23,6 +24,10 @@ export const createAIGenerationFactory = (provider: AIProviderFactoryType = 'gem
     return new ChatterboxAIGenerationFactory();
   }
 
+  if (provider === 'kokoro') {
+    return new KokoroAIGenerationFactory();
+  }
+
   return new GeminiAIGenerationFactory();
 };
 
@@ -36,6 +41,8 @@ export const generateAudioSpeech = async (config: AppConfig, story: Story): Prom
   const provider: AIProviderFactoryType =
     config.generationProviders.narration === 'chatterbox'
       ? 'chatterbox'
+      : config.generationProviders.narration === 'kokoro'
+        ? 'kokoro'
       : config.generationProviders.narration === 'comfyui'
         ? 'comfyui'
         : 'gemini';
