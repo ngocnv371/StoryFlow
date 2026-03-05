@@ -109,6 +109,44 @@ npm run dev
 
 Then open the local Vite URL (usually `http://localhost:5173`).
 
+### Local Chatterbox TTS API (Docker)
+
+If you want to use a local Chatterbox narration backend, you can run:
+
+- Repo: https://github.com/travisvn/chatterbox-tts-api
+
+1. Start the API container:
+
+```bash
+docker run -p 5123:5123 --gpus=all -e MAX_TOTAL_LENGTH=1000000 travisvn/chatterbox-tts-api:gpu
+```
+
+2. Replace the default voice sample inside the running container:
+
+```bash
+docker cp /path/to/your-sample-voice.mp3 <container-id>:/app/voice-sample.mp3
+```
+
+To find the container ID if needed:
+
+```bash
+docker ps
+```
+
+3. In StoryFlow settings, set the Chatterbox endpoint to your local API (for example: `http://<local-ip>:5123`).
+
+### Browser CORS workaround for local Chatterbox
+
+When calling a local Chatterbox API from the browser, CORS may block direct requests. One option is to run a CORS proxy container:
+
+```bash
+docker run -p 8080:8080 cors-anywhere
+```
+
+Then proxy requests through:
+
+`http://localhost:8080/<local-ip>:5123/v1/audio/speech`
+
 ## First-Time App Setup (inside UI)
 
 1. Sign up / log in.
