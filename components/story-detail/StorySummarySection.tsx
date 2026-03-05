@@ -8,14 +8,14 @@ interface StorySummarySectionProps {
 
 const StorySummarySection: React.FC<StorySummarySectionProps> = ({ story, onUpdate }) => {
   return (
-    <div className="bg-white p-6 rounded-2xl border shadow-sm">
+    <div className="bg-slate-900 p-6 rounded-2xl border shadow-sm">
       <div className="space-y-4">
         <div>
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Title</label>
           <input
             value={story.title}
             onChange={e => onUpdate({ title: e.target.value })}
-            className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-600 rounded-xl bg-slate-800 text-slate-100 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
           />
         </div>
 
@@ -25,7 +25,7 @@ const StorySummarySection: React.FC<StorySummarySectionProps> = ({ story, onUpda
             rows={3}
             value={story.summary}
             onChange={e => onUpdate({ summary: e.target.value })}
-            className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            className="w-full p-3 border border-slate-600 rounded-xl bg-slate-800 text-slate-100 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
           />
         </div>
       </div>

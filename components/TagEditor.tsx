@@ -39,16 +39,16 @@ const TagEditor: React.FC<TagEditorProps> = ({ tags, onChange }) => {
   return (
     <div className="space-y-2">
       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Story Tags</label>
-      <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border rounded-xl focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+      <div className="flex flex-wrap gap-2 p-3 bg-slate-800 border border-slate-600 rounded-xl focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
         {tags.map((tag) => (
           <span 
             key={tag} 
-            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-lg group animate-in zoom-in-90 duration-200"
+            className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500/20 text-indigo-200 text-sm font-semibold rounded-lg group animate-in zoom-in-90 duration-200"
           >
             #{tag}
             <button
               onClick={() => removeTag(tag)}
-              className="hover:text-indigo-900 focus:outline-none transition-colors"
+              className="hover:text-indigo-100 focus:outline-none transition-colors"
               title="Remove tag"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ const TagEditor: React.FC<TagEditorProps> = ({ tags, onChange }) => {
           onKeyDown={handleKeyDown}
           onBlur={addTag}
           placeholder={tags.length === 0 ? "Add tags (Sci-Fi, Mystery...)" : ""}
-          className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400"
+          className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-slate-100 placeholder:text-slate-500"
         />
       </div>
       <p className="text-[10px] text-slate-400 italic">Press Enter or comma to add tags.</p>

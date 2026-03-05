@@ -39,31 +39,31 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in duration-700">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+      <div className="w-full max-w-md bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-in fade-in duration-700">
         <div className="p-8 bg-indigo-600 text-white text-center">
           <h1 className="text-3xl font-bold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h1>
           <p className="opacity-80 mt-2">{isSignUp ? 'Join StoryFlow today' : 'Log in to manage your stories'}</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-8 space-y-4">
-          {error && <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">{error}</div>}
+          {error && <div className="p-4 bg-red-900/20 text-red-600 rounded-xl text-sm border border-red-900/40">{error}</div>}
           
           {isSignUp && (
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Full Name</label>
-              <input value={name} onChange={e => setName(e.target.value)} className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500" required />
+              <input value={name} onChange={e => setName(e.target.value)} className="w-full p-4 border border-slate-600 rounded-2xl bg-slate-800 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500" required />
             </div>
           )}
 
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 border border-slate-600 rounded-2xl bg-slate-800 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
           
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 border border-slate-600 rounded-2xl bg-slate-800 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
           
           <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">

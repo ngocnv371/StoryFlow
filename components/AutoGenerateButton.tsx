@@ -201,8 +201,8 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
         disabled={isAutoGenerating}
         className={`px-4 py-2 rounded-xl font-bold border transition-all ${
           isAutoGenerating
-            ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-            : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+            ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+            : 'bg-slate-900 text-indigo-300 border-indigo-700/40 hover:bg-indigo-900/30'
         }`}
       >
         {isAutoGenerating ? autoGeneratingStep || 'Running...' : '⚡Auto Generate'}
@@ -210,12 +210,12 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
 
       {isAutoDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
             <div className="p-5 border-b flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Automation Options</h3>
+              <h3 className="text-lg font-bold text-slate-100">Automation Options</h3>
               <button
                 onClick={() => setIsAutoDialogOpen(false)}
-                className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-full hover:bg-slate-800 transition-colors"
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,63 +225,63 @@ const AutoGenerateButton: React.FC<AutoGenerateButtonProps> = ({ story, onStoryU
             </div>
 
             <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-500">Choose which outputs to regenerate. Unchecked items run only when missing.</p>
+              <p className="text-sm text-slate-400">Choose which outputs to regenerate. Unchecked items run only when missing.</p>
 
-              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-600 bg-slate-800">
                 <input
                   type="checkbox"
                   checked={autoGenerationOptions.transcript}
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, transcript: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Transcript</span>
+                <span className="font-medium text-slate-200">Transcript</span>
               </label>
 
-              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-600 bg-slate-800">
                 <input
                   type="checkbox"
                   checked={autoGenerationOptions.cover}
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, cover: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Cover</span>
+                <span className="font-medium text-slate-200">Cover</span>
               </label>
 
-              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-600 bg-slate-800">
                 <input
                   type="checkbox"
                   checked={autoGenerationOptions.audio}
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, audio: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Narration</span>
+                <span className="font-medium text-slate-200">Narration</span>
               </label>
 
-              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-600 bg-slate-800">
                 <input
                   type="checkbox"
                   checked={autoGenerationOptions.music}
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, music: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Music</span>
+                <span className="font-medium text-slate-200">Music</span>
               </label>
 
-              <label className="flex items-center gap-3 p-3 rounded-xl border bg-slate-50">
+              <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-600 bg-slate-800">
                 <input
                   type="checkbox"
                   checked={autoGenerationOptions.video}
                   onChange={(e) => setAutoGenerationOptions(prev => ({ ...prev, video: e.target.checked }))}
                   className="w-4 h-4"
                 />
-                <span className="font-medium text-slate-700">Video</span>
+                <span className="font-medium text-slate-200">Video</span>
               </label>
             </div>
 
-            <div className="p-5 border-t bg-slate-50 flex justify-end gap-3">
+            <div className="p-5 border-t bg-slate-900 flex justify-end gap-3">
               <button
                 onClick={() => setIsAutoDialogOpen(false)}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white transition-colors"
+                className="px-4 py-2 rounded-lg border border-slate-700 text-slate-200 hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>

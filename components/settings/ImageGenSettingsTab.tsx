@@ -11,11 +11,11 @@ const ImageGenSettingsTab: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Provider</label>
         <select
           value={config.generationProviders.image}
           onChange={(e) => dispatch(setGenerationProvider({ generationType: 'image', provider: e.target.value as AIProvider }))}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         >
           <option value="gemini">Gemini</option>
           <option value="comfyui">ComfyUI</option>
@@ -23,7 +23,7 @@ const ImageGenSettingsTab: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Width</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Width</label>
         <input
           type="number"
           min="256"
@@ -33,12 +33,12 @@ const ImageGenSettingsTab: React.FC = () => {
             const width = Number.parseInt(e.target.value, 10);
             dispatch(setImageGenConfig({ width: Number.isNaN(width) ? 1280 : width }));
           }}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Height</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Height</label>
         <input
           type="number"
           min="256"
@@ -48,12 +48,12 @@ const ImageGenSettingsTab: React.FC = () => {
             const height = Number.parseInt(e.target.value, 10);
             dispatch(setImageGenConfig({ height: Number.isNaN(height) ? 720 : height }));
           }}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">CFG</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">CFG</label>
         <input
           type="number"
           min="1"
@@ -64,7 +64,7 @@ const ImageGenSettingsTab: React.FC = () => {
             const cfg = Number.parseFloat(e.target.value);
             dispatch(setImageGenConfig({ cfg: Number.isNaN(cfg) ? 7 : cfg }));
           }}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
       </div>
     </div>

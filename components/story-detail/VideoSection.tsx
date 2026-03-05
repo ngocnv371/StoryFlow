@@ -37,41 +37,41 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+    <div className="bg-slate-900 p-6 rounded-2xl border shadow-sm space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-slate-800">Video</h3>
+        <h3 className="font-bold text-slate-100">Video</h3>
       </div>
 
-      <div className="p-4 bg-slate-50 rounded-xl border space-y-4">
+      <div className="p-4 bg-slate-900 rounded-xl border space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Video Overrides</h4>
           <button
             type="button"
             onClick={handleResetOverrides}
-            className="text-xs text-indigo-600 font-semibold hover:text-indigo-700"
+            className="text-xs text-indigo-600 font-semibold hover:text-indigo-300"
           >
             Reset Video Effects
           </button>
         </div>
         <div className="space-y-2">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Video Effects</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Video Effects</p>
           <div className="flex flex-wrap gap-3">
-            <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg bg-white">
+            <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg bg-slate-900">
               <input
                 type="checkbox"
                 checked={storyConfig.video.enableKenBurns}
                 onChange={(event) => handleVideoToggle('enableKenBurns', event.target.checked)}
               />
-              <span className="text-sm text-slate-700">Ken Burns</span>
+              <span className="text-sm text-slate-200">Ken Burns</span>
             </label>
 
-            <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg bg-white">
+            <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg bg-slate-900">
               <input
                 type="checkbox"
                 checked={storyConfig.video.enableParticles}
                 onChange={(event) => handleVideoToggle('enableParticles', event.target.checked)}
               />
-              <span className="text-sm text-slate-700">Particles</span>
+              <span className="text-sm text-slate-200">Particles</span>
             </label>
           </div>
         </div>
@@ -79,8 +79,8 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
 
       <VideoGenerator story={story} />
       {story.video_url && (
-        <div className="p-4 bg-slate-50 rounded-xl space-y-2 border">
-          <p className="text-xs font-bold text-slate-400 uppercase">Saved Video</p>
+        <div className="p-4 bg-slate-900 rounded-xl space-y-2 border">
+          <p className="text-xs font-bold text-slate-500 uppercase">Saved Video</p>
           <div className="aspect-video rounded-lg overflow-hidden bg-black">
             <video
               controls

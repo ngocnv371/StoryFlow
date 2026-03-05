@@ -59,8 +59,8 @@ const Projects: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Your Projects</h1>
-          <p className="text-slate-500">Manage and create immersive stories with AI.</p>
+          <h1 className="text-3xl font-bold text-slate-100">Your Projects</h1>
+          <p className="text-slate-400">Manage and create immersive stories with AI.</p>
         </div>
         <div className="flex items-center gap-3">
           <ProjectIdeasGenerator />
@@ -69,7 +69,7 @@ const Projects: React.FC = () => {
             disabled={isCreating}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${
               isCreating 
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-200 hover:-translate-y-0.5'
             }`}
           >
@@ -87,12 +87,12 @@ const Projects: React.FC = () => {
 
       {loading && stories.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-20 space-y-4">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-indigo-700/40 border-t-indigo-600 rounded-full animate-spin"></div>
           <p className="text-slate-400 font-medium">Loading your stories...</p>
         </div>
       ) : stories.length === 0 ? (
-        <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+        <div className="text-center p-20 bg-slate-900 rounded-3xl border border-dashed border-slate-700">
+          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
           </div>
           <p className="text-slate-400 font-medium mb-4">No stories found. Start your journey today!</p>
@@ -106,7 +106,7 @@ const Projects: React.FC = () => {
               id="status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-3 py-2 border rounded-xl bg-white text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              className="px-3 py-2 border border-slate-600 rounded-xl bg-slate-800 text-sm text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             >
               <option value="All">All</option>
               <option value="Draft">Draft</option>
@@ -117,18 +117,18 @@ const Projects: React.FC = () => {
           </div>
 
           {filteredStories.length === 0 ? (
-            <div className="text-center p-10 bg-white rounded-2xl border border-dashed border-slate-300">
-              <p className="text-slate-500 font-medium">No projects match the selected status.</p>
+            <div className="text-center p-10 bg-slate-900 rounded-2xl border border-dashed border-slate-700">
+              <p className="text-slate-400 font-medium">No projects match the selected status.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredStories.map((story) => (
-            <Link key={story.id} to={`/projects/${story.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl transition-all flex flex-col">
-              <div className="relative aspect-video overflow-hidden bg-slate-100">
+            <Link key={story.id} to={`/projects/${story.id}`} className="group bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-700 hover:border-slate-600 hover:shadow-xl transition-all flex flex-col">
+              <div className="relative aspect-video overflow-hidden bg-slate-800">
                 <img src={story.thumbnail_url || 'https://via.placeholder.com/400x225'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={story.title} />
                 <div className="absolute top-3 right-3 flex items-center gap-2">
                   {formatDuration(story.duration) !== '—' && (
-                    <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-full shadow-sm bg-white/90 text-slate-700 backdrop-blur-sm">
+                    <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-full shadow-sm bg-slate-950/90 text-slate-100 backdrop-blur-sm">
                       {formatDuration(story.duration)}
                     </span>
                   )}
@@ -142,14 +142,14 @@ const Projects: React.FC = () => {
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">{story.title}</h3>
-                <p className="text-sm text-slate-500 line-clamp-2 mb-4">{story.summary}</p>
+                <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-indigo-600 transition-colors">{story.title}</h3>
+                <p className="text-sm text-slate-400 line-clamp-2 mb-4">{story.summary}</p>
                 <div className="flex flex-wrap gap-1 mt-auto">
                   {story.tags.slice(0, MAX_VISIBLE_TAGS).map(tag => (
-                    <span key={tag} className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">#{tag}</span>
+                    <span key={tag} className="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded uppercase font-bold">#{tag}</span>
                   ))}
                   {story.tags.length > MAX_VISIBLE_TAGS && (
-                    <span className="bg-slate-200 text-slate-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                    <span className="bg-slate-700 text-slate-400 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
                       +{story.tags.length - MAX_VISIBLE_TAGS}
                     </span>
                   )}

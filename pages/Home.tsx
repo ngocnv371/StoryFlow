@@ -24,7 +24,7 @@ const Home: React.FC = () => {
   const stats = [
     { label: 'Total Stories', value: stories.length, icon: '📚', color: 'bg-blue-500' },
     { label: 'Pending Review', value: stories.filter(s => s.status === 'Pending').length, icon: '⏳', color: 'bg-amber-500' },
-    { label: 'Drafts', value: stories.filter(s => s.status === 'Draft').length, icon: '✍️', color: 'bg-indigo-500' },
+    { label: 'Drafts', value: stories.filter(s => s.status === 'Draft').length, icon: '✍️', color: 'bg-indigo-500/70' },
     { label: 'Completed', value: stories.filter(s => s.status === 'Completed').length, icon: '✅', color: 'bg-emerald-500' },
   ];
 
@@ -53,15 +53,15 @@ const Home: React.FC = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Welcome Back</h1>
-          <p className="text-slate-500 mt-1">Here's an overview of your storytelling workflow.</p>
+          <h1 className="text-3xl font-bold text-slate-100">Welcome Back</h1>
+          <p className="text-slate-400 mt-1">Here's an overview of your storytelling workflow.</p>
         </div>
         <button
           onClick={handleCreateNew}
           disabled={isCreating}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
             isCreating 
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
               : 'bg-indigo-600 text-white hover:bg-indigo-700'
           }`}
         >
@@ -78,14 +78,14 @@ const Home: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+          <div key={i} className="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-700 hover:border-slate-600 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 ${stat.color} text-white text-2xl flex items-center justify-center rounded-xl shadow-lg`}>
                 {stat.icon}
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
+                <p className="text-sm font-medium text-slate-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-slate-100">{stat.value}</p>
               </div>
             </div>
           </div>
@@ -93,14 +93,14 @@ const Home: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div className="lg:col-span-2 bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-700">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-slate-800">Workflow Distribution</h3>
+            <h3 className="text-lg font-bold text-slate-100">Workflow Distribution</h3>
             <div className="flex gap-4">
                {chartData.map(d => (
                  <div key={d.name} className="flex items-center gap-1.5">
                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: d.color}}></div>
-                   <span className="text-xs text-slate-500 font-medium">{d.name}</span>
+                   <span className="text-xs text-slate-400 font-medium">{d.name}</span>
                  </div>
                ))}
             </div>
@@ -108,12 +108,12 @@ const Home: React.FC = () => {
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
                 <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                  cursor={{fill: '#0f172a'}}
+                  contentStyle={{backgroundColor: '#0f172a', color: '#e2e8f0', borderRadius: '12px', border: '1px solid #334155', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.45)'}}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {chartData.map((entry, index) => (
@@ -125,23 +125,23 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Recent Activity</h3>
+        <div className="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-700 flex flex-col">
+          <h3 className="text-lg font-bold text-slate-100 mb-6">Recent Activity</h3>
           <div className="space-y-4 flex-1">
             {stories.length > 0 ? (
               stories.slice(0, 5).map(story => (
-                <div key={story.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate(`/projects/${story.id}`)}>
-                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                <div key={story.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer" onClick={() => navigate(`/projects/${story.id}`)}>
+                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800">
                     <img src={story.thumbnail_url} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{story.title}</p>
-                    <p className="text-xs text-slate-500">{new Date(story.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm font-semibold text-slate-100 truncate">{story.title}</p>
+                    <p className="text-xs text-slate-400">{new Date(story.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
-                    story.status === 'Completed' ? 'bg-emerald-100 text-emerald-600' :
-                    story.status === 'Pending' ? 'bg-amber-100 text-amber-600' :
-                    'bg-slate-100 text-slate-600'
+                    story.status === 'Completed' ? 'bg-emerald-900/30 text-emerald-300' :
+                    story.status === 'Pending' ? 'bg-amber-900/30 text-amber-300' :
+                    'bg-slate-700 text-slate-300'
                   }`}>
                     {story.status}
                   </div>

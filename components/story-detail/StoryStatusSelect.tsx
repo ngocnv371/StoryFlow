@@ -12,7 +12,7 @@ const StoryStatusSelect: React.FC<StoryStatusSelectProps> = ({ value, onChange, 
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as Story['status'])}
-      className={`w-full px-3 py-2 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${className}`}
+      className={`w-full px-3 py-2 border border-slate-600 rounded-xl bg-slate-800 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${className}`}
     >
       <option value="Draft">Draft</option>
       <option value="Pending">Pending</option>

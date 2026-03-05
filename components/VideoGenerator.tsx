@@ -163,9 +163,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         disabled={isGenerating || !hasRequiredAssets}
         className={`w-full group relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg ${
           isGenerating 
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+            ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
             : !hasRequiredAssets
-            ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+            ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
             : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-purple-200 hover:-translate-y-0.5'
         }`}
       >
@@ -206,7 +206,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
               <span className={`w-2 h-2 rounded-full ${story.video_url ? 'bg-green-400' : 'bg-gray-300'}`}></span>
               <span>Video: {story.video_url ? 'Saved to Cloud' : 'Not uploaded'}</span>
             </div>
-            <p className="mt-2 italic leading-relaxed text-slate-300">
+            <p className="mt-2 italic leading-relaxed text-slate-600">
               Creates a video using hybrid MediaRecorder approach with precise frame control at 24 FPS, matching audio duration with your cover art as the background.
             </p>
           </div>
@@ -215,7 +215,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       )}
 
       {hasCompiledVideo && (
-        <div className="bg-white p-4 rounded-xl border shadow-sm space-y-3">
+        <div className="bg-slate-900 p-4 rounded-xl border shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-gray-800">Video Preview</h3>
@@ -257,7 +257,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
                 disabled={isSaving}
                 className={`flex-1 ${
                   isSaving 
-                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200 hover:-translate-y-0.5'
                 } min-w-[140px] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2`}
               >
@@ -291,7 +291,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
                 disabled={isPostingToYouTube}
                 className={`flex-1 min-w-[140px] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                   isPostingToYouTube
-                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-red-600 to-orange-600 hover:shadow-orange-200 hover:-translate-y-0.5'
                 }`}
               >

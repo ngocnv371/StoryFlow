@@ -48,7 +48,7 @@ const BackgroundMusicGenerator: React.FC<BackgroundMusicGeneratorProps> = ({ sto
         disabled={isGenerating}
         className={`w-full group flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg ${
           isGenerating
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
             : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:shadow-violet-200 hover:-translate-y-0.5'
         }`}
       >

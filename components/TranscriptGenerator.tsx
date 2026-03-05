@@ -94,8 +94,8 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
         disabled={isGenerating}
         className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-sm border ${
           isGenerating
-            ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            ? 'bg-slate-800 border-slate-600 text-slate-500 cursor-not-allowed'
+            : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700'
         }`}
       >
         {isGenerating ? (
@@ -113,8 +113,8 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
         disabled={isGenerating}
         className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-sm border ${
           isGenerating
-            ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-            : 'bg-white border-indigo-200 text-indigo-600 hover:bg-indigo-50'
+            ? 'bg-slate-800 border-slate-600 text-slate-500 cursor-not-allowed'
+            : 'bg-slate-800 border-indigo-600/50 text-indigo-300 hover:bg-indigo-500/20'
         }`}
       >
         {isGenerating ? (

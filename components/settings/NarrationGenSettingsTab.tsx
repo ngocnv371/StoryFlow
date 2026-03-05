@@ -11,11 +11,11 @@ const NarrationGenSettingsTab: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Provider</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Provider</label>
         <select
           value={config.generationProviders.narration}
           onChange={(e) => dispatch(setGenerationProvider({ generationType: 'narration', provider: e.target.value as AIProvider }))}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         >
           <option value="gemini">Gemini</option>
           <option value="comfyui">ComfyUI</option>
@@ -25,26 +25,26 @@ const NarrationGenSettingsTab: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Voice</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Voice</label>
         <input
           type="text"
           value={config.audioGen.voice || ''}
           placeholder="Kore"
           onChange={(e) => dispatch(setAudioGenConfig({ voice: e.target.value }))}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
         <a
           href="https://docs.cloud.google.com/text-to-speech/docs/gemini-tts#voice_options"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 inline-block text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
+          className="mt-1 inline-block text-xs text-indigo-600 hover:text-indigo-300 hover:underline"
         >
           {config.generationProviders.narration === 'gemini' ? 'View Gemini TTS voice options' : 'Voice options depend on your selected provider'}
         </a>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Speed</label>
+        <label className="block text-sm font-medium text-slate-200 mb-1">Speed</label>
         <input
           type="number"
           min="0.5"
@@ -55,7 +55,7 @@ const NarrationGenSettingsTab: React.FC = () => {
             const speed = Number.parseFloat(e.target.value);
             dispatch(setAudioGenConfig({ speed: Number.isNaN(speed) ? 1 : speed }));
           }}
-          className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
         />
       </div>
     </div>

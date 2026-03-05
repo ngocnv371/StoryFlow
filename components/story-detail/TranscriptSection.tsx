@@ -10,11 +10,11 @@ interface TranscriptSectionProps {
 
 const TranscriptSection: React.FC<TranscriptSectionProps> = ({ story, onUpdate }) => {
   return (
-    <div className="bg-white rounded-2xl border shadow-sm h-[700px] flex flex-col overflow-hidden">
-      <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+    <div className="bg-slate-900 rounded-2xl border shadow-sm h-[700px] flex flex-col overflow-hidden">
+      <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-          <h3 className="font-bold text-slate-800">Transcript Editor</h3>
+          <h3 className="font-bold text-slate-100">Transcript Editor</h3>
         </div>
         <TranscriptGenerator
           story={story}
@@ -30,11 +30,11 @@ const TranscriptSection: React.FC<TranscriptSectionProps> = ({ story, onUpdate }
       <textarea
         value={story.transcript}
         onChange={e => onUpdate({ transcript: e.target.value })}
-        className="flex-1 p-8 text-lg text-slate-700 leading-relaxed outline-none resize-none bg-white font-serif"
+        className="flex-1 p-8 text-lg text-slate-100 leading-relaxed outline-none resize-none bg-slate-950 font-serif placeholder:text-slate-500"
         placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..."
       />
-      <div className="px-4 py-2 border-t bg-slate-50 text-right">
-        <span className={`text-xs font-medium ${(story.transcript?.length || 0) > TRANSCRIPT_SOFT_LIMIT ? 'text-amber-600' : 'text-slate-500'}`}>
+      <div className="px-4 py-2 border-t border-slate-700 bg-slate-900 text-right">
+        <span className={`text-xs font-medium ${(story.transcript?.length || 0) > TRANSCRIPT_SOFT_LIMIT ? 'text-amber-400' : 'text-slate-400'}`}>
           {(story.transcript?.length || 0).toLocaleString()} / {TRANSCRIPT_SOFT_LIMIT.toLocaleString()} characters
         </span>
       </div>

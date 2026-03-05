@@ -21,13 +21,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-950 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col shadow-sm">
+      <aside className="w-64 bg-slate-950 border-r border-slate-800 hidden md:flex flex-col shadow-sm">
         <div className="p-6">
           <div className="flex items-center gap-3 text-indigo-600">
             <img src={storyFlowLogo} alt="StoryFlow logo" className="w-8 h-8 rounded-lg object-cover" />
-            <h1 className="text-xl font-bold tracking-tight text-slate-800">StoryFlow</h1>
+            <h1 className="text-xl font-bold tracking-tight text-slate-100">StoryFlow</h1>
           </div>
         </div>
 
@@ -38,8 +38,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                 location.pathname === item.path
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  ? 'bg-indigo-500/20 text-indigo-300 shadow-sm'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
               }`}
             >
               {item.icon}
@@ -51,14 +51,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="p-4 border-t space-y-2">
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-100 rounded-xl transition-all"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             <span className="font-medium">Settings</span>
           </button>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-900/20 rounded-xl transition-all"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             <span className="font-medium">Logout</span>
@@ -68,20 +68,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
+        <header className="h-16 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 sticky top-0 z-40">
           <div className="flex items-center gap-2">
             <span className="text-slate-400 font-medium">Pages</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-800 font-semibold">
+            <span className="text-slate-500">/</span>
+            <span className="text-slate-100 font-semibold">
               {menuItems.find(i => i.path === location.pathname)?.label || 'Details'}
             </span>
           </div>
           <div className="flex items-center gap-4">
              <div className="text-right hidden sm:block">
-               <p className="text-sm font-bold text-slate-800">{user?.username}</p>
-               <p className="text-xs text-slate-500">Administrator</p>
+               <p className="text-sm font-bold text-slate-100">{user?.username}</p>
+               <p className="text-xs text-slate-400">Administrator</p>
              </div>
-             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} className="w-10 h-10 rounded-full border-2 border-indigo-100 bg-white" alt="Avatar" />
+             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} className="w-10 h-10 rounded-full border-2 border-indigo-600/40 bg-slate-800" alt="Avatar" />
           </div>
         </header>
 

@@ -41,199 +41,199 @@ const ProviderSettingsTab: React.FC = () => {
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">Gemini</h3>
+        <h3 className="text-base font-semibold text-slate-100">Gemini</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Gemini API Key</label>
           <input
             type="password"
             value={config.gemini.apiKey}
             placeholder="Enter your Gemini API key"
             onChange={(e) => dispatch(setGeminiConfig({ apiKey: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Text Model Name</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Text Model Name</label>
           <input
             type="text"
             value={config.gemini.textModel}
             placeholder="gemini-3-flash-preview"
             onChange={(e) => dispatch(setGeminiConfig({ textModel: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Audio Model Name</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Audio Model Name</label>
           <input
             type="text"
             value={config.gemini.audioModel}
             placeholder="gemini-2.5-flash-preview-tts"
             onChange={(e) => dispatch(setGeminiConfig({ audioModel: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Image Model Name</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Image Model Name</label>
           <input
             type="text"
             value={config.gemini.imageModel}
             placeholder="gemini-2.5-flash-image"
             onChange={(e) => dispatch(setGeminiConfig({ imageModel: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">ComfyUI</h3>
+        <h3 className="text-base font-semibold text-slate-100">ComfyUI</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">ComfyUI URL</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">ComfyUI URL</label>
           <input
             type="text"
             value={config.comfy.endpoint}
             placeholder="http://127.0.0.1:8188/prompt"
             onChange={(e) => dispatch(setComfyConfig({ endpoint: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">ComfyUI API Key</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">ComfyUI API Key</label>
           <input
             type="password"
             value={config.comfy.apiKey}
             placeholder="Enter your ComfyUI API token"
             onChange={(e) => dispatch(setComfyConfig({ apiKey: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">ComfyUI Model</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">ComfyUI Model</label>
           <input
             type="text"
             value={config.comfy.model || ''}
             placeholder="Optional ComfyUI model name"
             onChange={(e) => dispatch(setComfyConfig({ model: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">OpenAI compatible (Text only)</h3>
+        <h3 className="text-base font-semibold text-slate-100">OpenAI compatible (Text only)</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Base URL</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Base URL</label>
           <input
             type="text"
             value={config.openAICompatible.url}
             placeholder="https://api.openai.com/v1 or http://localhost:1234/v1"
             onChange={(e) => dispatch(setOpenAICompatibleConfig({ url: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
           <p className="text-xs text-slate-500 mt-1">Supports OpenAI and LM Studio compatible chat completions endpoints.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">API Token</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">API Token</label>
           <input
             type="password"
             value={config.openAICompatible.token}
             placeholder="Enter your OpenAI/LM Studio token"
             onChange={(e) => dispatch(setOpenAICompatibleConfig({ token: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">Chatterbox (Narration only)</h3>
+        <h3 className="text-base font-semibold text-slate-100">Chatterbox (Narration only)</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Endpoint URL</label>
           <input
             type="text"
             value={config.chatterbox.endpoint}
             placeholder="http://localhost:8000/tts"
             onChange={(e) => dispatch(setChatterboxConfig({ endpoint: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">API Token</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">API Token</label>
           <input
             type="password"
             value={config.chatterbox.token}
             placeholder="Optional bearer token"
             onChange={(e) => dispatch(setChatterboxConfig({ token: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Model</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Model</label>
           <input
             type="text"
             value={config.chatterbox.model}
             placeholder="chatterbox"
             onChange={(e) => dispatch(setChatterboxConfig({ model: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
           <p className="text-xs text-slate-500 mt-1">Narration requests send text, voice, speed, narrator, and model as JSON.</p>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">Kokoro (Narration only)</h3>
+        <h3 className="text-base font-semibold text-slate-100">Kokoro (Narration only)</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Endpoint URL</label>
           <input
             type="text"
             value={config.kokoro.endpoint}
             placeholder="http://localhost:5000/predictions"
             onChange={(e) => dispatch(setKokoroConfig({ endpoint: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
           <p className="text-xs text-slate-500 mt-1">Use your local Kokoro API endpoint. The docs UI is typically at /docs.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">API Token</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">API Token</label>
           <input
             type="password"
             value={config.kokoro.token}
             placeholder="Optional bearer token"
             onChange={(e) => dispatch(setKokoroConfig({ token: e.target.value }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-base font-semibold text-slate-800">YouTube Upload</h3>
+        <h3 className="text-base font-semibold text-slate-100">YouTube Upload</h3>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">OAuth Client ID</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">OAuth Client ID</label>
           <input
             type="text"
             value={config.youtube.clientId}
             placeholder="Paste your Google OAuth 2.0 Web Client ID"
             onChange={(e) => dispatch(setYouTubeConfig({ clientId: e.target.value, accessToken: '', accessTokenExpiresAt: 0 }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           />
           <p className="text-xs text-slate-500 mt-1">Enable YouTube Data API v3 and add your app origin to Authorized JavaScript origins.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Authorization</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Authorization</label>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -241,7 +241,7 @@ const ProviderSettingsTab: React.FC = () => {
               disabled={isAuthorizingYouTube}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isAuthorizingYouTube
-                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                   : 'bg-red-600 text-white hover:bg-red-700'
               }`}
             >
@@ -254,11 +254,11 @@ const ProviderSettingsTab: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Default Privacy</label>
+          <label className="block text-sm font-medium text-slate-200 mb-1">Default Privacy</label>
           <select
             value={config.youtube.privacyStatus}
             onChange={(e) => dispatch(setYouTubeConfig({ privacyStatus: e.target.value as 'private' | 'public' | 'unlisted' }))}
-            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="unlisted">Unlisted</option>
             <option value="private">Private</option>

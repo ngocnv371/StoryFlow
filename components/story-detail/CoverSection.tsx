@@ -43,19 +43,19 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+    <div className="bg-slate-900 p-6 rounded-2xl border shadow-sm space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-slate-800">Cover</h3>
+        <h3 className="font-bold text-slate-100">Cover</h3>
         <button
           type="button"
           onClick={handleResetCoverOverrides}
-          className="text-xs text-indigo-600 font-semibold hover:text-indigo-700"
+          className="text-xs text-indigo-600 font-semibold hover:text-indigo-300"
         >
           Reset Cover Size
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-800 rounded-xl border border-slate-600">
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Width</label>
           <input
@@ -63,7 +63,7 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
             min={1}
             value={storyConfig.imageGen.width ?? ''}
             onChange={(event) => handleCoverSizeChange('width', event.target.value)}
-            className="w-full p-2 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            className="w-full p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
           />
         </div>
         <div className="space-y-2">
@@ -73,7 +73,7 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
             min={1}
             value={storyConfig.imageGen.height ?? ''}
             onChange={(event) => handleCoverSizeChange('height', event.target.value)}
-            className="w-full p-2 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            className="w-full p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
           />
         </div>
       </div>
@@ -84,7 +84,7 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
           rows={4}
           value={story.cover_prompt || ''}
           onChange={e => onUpdate({ cover_prompt: e.target.value })}
-          className="w-full p-3 border rounded-xl bg-slate-50 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          className="w-full p-3 border border-slate-600 rounded-xl bg-slate-800 text-slate-100 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
           placeholder="A concise but vivid image-generation prompt for the story cover art"
         />
       </div>
