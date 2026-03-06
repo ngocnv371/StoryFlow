@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { generateProjectIdeas } from '../services/aiService';
-import { createStoriesFromIdeasRemote } from '../store/storiesSlice';
+import { createStoriesFromIdeasRemote, setProjectIdeasGenerating } from '../store/storiesSlice';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,7 @@ const ProjectIdeasGenerator: React.FC = () => {
     }
 
     setStep('generating');
+    dispatch(setProjectIdeasGenerating(true));
 
     try {
       const generatedIdeas = await generateProjectIdeas(config, theme.trim());
@@ -51,6 +52,8 @@ const ProjectIdeasGenerator: React.FC = () => {
     } catch (error: any) {
       setStep('theme');
       toast.error(error.message || 'Unable to generate project ideas. Check your text generation provider settings.');
+    } finally {
+      dispatch(setProjectIdeasGenerating(false));
     }
   };
 

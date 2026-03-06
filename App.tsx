@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import AppTitleManager from './components/AppTitleManager';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
@@ -32,6 +33,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App: React.FC = () => {
   return (
     <Provider store={store}>
+      <AppTitleManager />
       <AuthProvider>
         <HashRouter>
           <Routes>
