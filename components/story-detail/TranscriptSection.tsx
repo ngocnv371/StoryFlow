@@ -9,6 +9,9 @@ interface TranscriptSectionProps {
 }
 
 const TranscriptSection: React.FC<TranscriptSectionProps> = ({ story, onUpdate }) => {
+  const transcriptText = story.transcript || '';
+  const wordCount = transcriptText.trim() ? transcriptText.trim().split(/\s+/).length : 0;
+
   return (
     <div className="bg-slate-900 rounded-2xl border shadow-sm h-[700px] flex flex-col overflow-hidden">
       <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900">
@@ -33,9 +36,12 @@ const TranscriptSection: React.FC<TranscriptSectionProps> = ({ story, onUpdate }
         className="flex-1 p-8 text-lg text-slate-100 leading-relaxed outline-none resize-none bg-slate-950 font-serif placeholder:text-slate-500"
         placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..."
       />
-      <div className="px-4 py-2 border-t border-slate-700 bg-slate-900 text-right">
-        <span className={`text-xs font-medium ${(story.transcript?.length || 0) > TRANSCRIPT_SOFT_LIMIT ? 'text-amber-400' : 'text-slate-400'}`}>
-          {(story.transcript?.length || 0).toLocaleString()} / {TRANSCRIPT_SOFT_LIMIT.toLocaleString()} characters
+      <div className="px-4 py-2 border-t border-slate-700 bg-slate-900 flex justify-between items-center">
+        <span className="text-xs font-medium text-slate-400">
+          {wordCount.toLocaleString()} words
+        </span>
+        <span className={`text-xs font-medium ${transcriptText.length > TRANSCRIPT_SOFT_LIMIT ? 'text-amber-400' : 'text-slate-400'}`}>
+          {transcriptText.length.toLocaleString()} / {TRANSCRIPT_SOFT_LIMIT.toLocaleString()} characters
         </span>
       </div>
     </div>
