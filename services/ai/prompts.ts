@@ -16,7 +16,7 @@ IMPORTANT INSTRUCTIONS:
 
 2. Generate tags in YouTube style: concise, searchable keywords that capture genres, themes, moods, and related topics.
 
-3. The transcript should be at least 3000 words of pure narration text only - no stage directions, no formatting, no metadata. Can contain multiple paragraphs as needed.
+3. The transcript should be at least 3000 words in multiple paragraphs of pure narration text only - no stage directions, no formatting, no metadata.
 
 Example format:
 {
