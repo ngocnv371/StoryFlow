@@ -4,7 +4,7 @@ import { createWavHeader } from '../../audio';
 import { buildExtendTranscriptPrompt, buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
-import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
+import { TEXT_GEN_MAX_OUTPUT_TOKENS, TRANSCRIPT_SOFT_LIMIT } from '@/constants';
 
 export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
@@ -15,6 +15,9 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       const response = await ai.models.generateContent({
         model: config.gemini.textModel || 'gemini-3-flash-preview',
         contents: buildTranscriptPrompt(storyDetails),
+        config: {
+          maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
+        },
       });
 
       if (!response.text) {
@@ -60,6 +63,9 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       const response = await ai.models.generateContent({
         model: config.gemini.textModel || 'gemini-3-flash-preview',
         contents: buildExtendTranscriptPrompt(tags, transcript),
+        config: {
+          maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
+        },
       });
 
       if (!response.text) {
@@ -86,6 +92,9 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       const response = await ai.models.generateContent({
         model: config.gemini.textModel || 'gemini-3-flash-preview',
         contents: buildProjectIdeasPrompt(theme),
+        config: {
+          maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
+        },
       });
 
       if (!response.text) {

@@ -1,1 +1,2 @@
 export const TRANSCRIPT_SOFT_LIMIT = 3000;
+export const TEXT_GEN_MAX_OUTPUT_TOKENS = 8192;
