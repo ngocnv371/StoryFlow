@@ -137,6 +137,11 @@ docker ps
 
 4. Create a voice through the api with a provided example in [/assets/voices/female_shadowheart4.flac]
 
+5. Built-in Voices
+   - jessica
+   - elaine
+   - rupert
+
 #### Chatterbox troubleshooting (missing `peft`)
 
 If you see this in the Chatterbox container logs:

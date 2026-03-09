@@ -6,7 +6,8 @@ export interface Story {
   summary: string;
   metadata?: StoryMetadata;
   tags: string[];
-  transcript: string;
+  transcript?: string;
+  word_count: number;
   cover_prompt?: string;
   narrator?: string;
   music?: string;

@@ -24,6 +24,14 @@ const formatDuration = (duration?: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const formatWordCount = (wordCount?: number): string => {
+  if (typeof wordCount !== 'number' || !Number.isFinite(wordCount) || wordCount < 0 || !wordCount) {
+    return '';
+  }
+
+  return `${wordCount.toLocaleString()} words`;
+};
+
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -130,6 +138,11 @@ const Projects: React.FC = () => {
                   {formatDuration(story.duration) !== '—' && (
                     <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-full shadow-sm bg-slate-950/90 text-slate-100 backdrop-blur-sm">
                       {formatDuration(story.duration)}
+                    </span>
+                  )}
+                  {formatWordCount(story.word_count) && (
+                    <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-full shadow-sm bg-slate-950/90 text-slate-100 backdrop-blur-sm">
+                      {formatWordCount(story.word_count)}
                     </span>
                   )}
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-sm ${

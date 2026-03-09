@@ -31,7 +31,7 @@ const TranscriptSection: React.FC<TranscriptSectionProps> = ({ story, onUpdate }
         />
       </div>
       <textarea
-        value={story.transcript}
+        value={story.transcript || ''}
         onChange={e => onUpdate({ transcript: e.target.value })}
         className="flex-1 p-8 text-lg text-slate-100 leading-relaxed outline-none resize-none bg-slate-950 font-serif placeholder:text-slate-500"
         placeholder="Tell your story here, or use the Magic Transcript button to generate a draft based on your summary..."

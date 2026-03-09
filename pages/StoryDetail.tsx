@@ -28,9 +28,10 @@ const StoryDetail: React.FC = () => {
   const [isLoadingStory, setIsLoadingStory] = useState(false);
   const [storyLoadFailed, setStoryLoadFailed] = useState(false);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const hasDetailTranscript = typeof story?.transcript === "string";
 
   useEffect(() => {
-    if (!id || story) return;
+    if (!id || hasDetailTranscript) return;
 
     setIsLoadingStory(true);
     setStoryLoadFailed(false);
@@ -48,7 +49,7 @@ const StoryDetail: React.FC = () => {
       .finally(() => {
         setIsLoadingStory(false);
       });
-  }, [dispatch, id, story]);
+  }, [dispatch, hasDetailTranscript, id]);
 
   useEffect(() => {
     if (story) setFormData(story);

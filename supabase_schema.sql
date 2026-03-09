@@ -15,19 +15,21 @@ CREATE TABLE public.stories (
   metadata JSONB DEFAULT '{}'::jsonb,
   tags TEXT[] DEFAULT '{}',
   transcript TEXT DEFAULT '',
+  word_count INTEGER DEFAULT 0,
   cover_prompt TEXT,
   narrator TEXT,
   music TEXT,
   status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed', 'Archived')),
   thumbnail_url TEXT,
   audio_url TEXT,
-  duration INTEGER,
+  duration INTEGER DEFAULT 0,
   music_url TEXT,
   video_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS duration INTEGER;
+ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0;
+ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT 0;
 
 -- 3. Enable RLS on Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

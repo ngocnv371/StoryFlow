@@ -15,10 +15,41 @@ interface StoriesState {
   videoGenerationStatuses: Record<string, 'idle' | 'generating' | 'error'>;
 }
 
+const storyListSelect = `
+  id,
+  user_id,
+  title,
+  summary,
+  metadata,
+  tags,
+  cover_prompt,
+  narrator,
+  music,
+  status,
+  created_at,
+  thumbnail_url,
+  audio_url,
+  duration,
+  music_url,
+  video_url,
+  word_count
+`;
+
+const storyDetailSelect = `
+  ${storyListSelect},
+  transcript
+`;
+
+const countWords = (text: string): number => {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+};
+
 export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
   const { data, error } = await supabase
     .from('stories')
-    .select('*')
+    .select(storyListSelect)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data as Story[];
@@ -27,7 +58,7 @@ export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
 export const fetchStoryById = createAsyncThunk('stories/fetchById', async (id: string) => {
   const { data, error } = await supabase
     .from('stories')
-    .select('*')
+    .select(storyDetailSelect)
     .eq('id', id)
     .maybeSingle();
 
@@ -45,9 +76,10 @@ export const createStoryRemote = createAsyncThunk('stories/create', async (userI
       tags: ['draft'],
       status: 'Draft',
       thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
-      transcript: ''
+      transcript: '',
+      word_count: 0,
     })
-    .select();
+    .select(storyDetailSelect);
   if (error) throw error;
   return data[0] as Story;
 });
@@ -76,13 +108,14 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
       tags: ['idea', 'draft'],
       status: 'Draft',
       thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
-      transcript: ''
+      transcript: '',
+      word_count: 0,
     }));
 
     const { data, error } = await supabase
       .from('stories')
       .insert(rows)
-      .select();
+      .select(storyDetailSelect);
 
     if (error) throw error;
     return data as Story[];
@@ -90,26 +123,36 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
 );
 
 export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story) => {
+  const hasTranscript = typeof story.transcript === 'string';
+  const transcript = hasTranscript ? story.transcript : '';
+  const word_count = hasTranscript ? countWords(transcript) : (story.word_count ?? 0);
+
+  const payload: Record<string, unknown> = {
+    title: story.title,
+    summary: story.summary,
+    tags: story.tags,
+    status: story.status,
+    thumbnail_url: story.thumbnail_url,
+    audio_url: story.audio_url,
+    duration: story.duration,
+    music_url: story.music_url,
+    video_url: story.video_url,
+    narrator: story.narrator,
+    cover_prompt: story.cover_prompt,
+    music: story.music,
+    metadata: story.metadata,
+    word_count: word_count,
+  };
+
+  if (hasTranscript) {
+    payload.transcript = transcript;
+  }
+
   const { data, error } = await supabase
     .from('stories')
-    .update({
-      title: story.title,
-      summary: story.summary,
-      tags: story.tags,
-      transcript: story.transcript,
-      status: story.status,
-      thumbnail_url: story.thumbnail_url,
-      audio_url: story.audio_url,
-      duration: story.duration,
-      music_url: story.music_url,
-      video_url: story.video_url,
-      narrator: story.narrator,
-      cover_prompt: story.cover_prompt,
-      music: story.music,
-      metadata: story.metadata,
-    })
+    .update(payload)
     .eq('id', story.id)
-    .select();
+    .select(storyDetailSelect);
   if (error) throw error;
   return data[0] as Story;
 });
