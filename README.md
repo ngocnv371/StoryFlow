@@ -113,12 +113,12 @@ Then open the local Vite URL (usually `http://localhost:5173`).
 
 If you want to use a local Chatterbox narration backend, you can run:
 
-- Repo: https://github.com/travisvn/chatterbox-tts-api
+- Repo: https://github.com/travisvn/chatterbox-tts-api or one of the spawned forks.
 
 1. Start the API container:
 
 ```bash
-docker run -p 5123:5123 --gpus=all -e MAX_TOTAL_LENGTH=1000000 travisvn/chatterbox-tts-api:gpu
+docker run -p 4123:4123 -e USE_MULTILINGUAL_MODEL=false --gpus=all hanseware/chatterbox-tts-api:uv.gpu-20260225
 ```
 
 2. Replace the default voice sample inside the running container:
@@ -134,6 +134,25 @@ docker ps
 ```
 
 3. In StoryFlow settings, set the Chatterbox endpoint to your local API (for example: `http://<local-ip>:5123`).
+
+#### Chatterbox troubleshooting (missing `peft`)
+
+If you see this in the Chatterbox container logs:
+
+```text
+/app/.venv/lib/python3.11/site-packages/diffusers/models/lora.py:393: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.
+   deprecate("LoRACompatibleLinear", "1.0.0", deprecation_message)
+✗ Failed to initialize model: 'NoneType' object is not callable
+```
+
+This usually means the image is missing the `peft` package. As a workaround (since this is not our image), enter the container and run:
+
+```bash
+/app/.venv/bin/virtualenv /app/.venv --seed=pip
+/app/.venv/bin/python -m pip install peft
+```
+
+Then restart the container.
 
 ### Browser CORS workaround for local Chatterbox
 
