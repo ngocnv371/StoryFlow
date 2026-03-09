@@ -135,6 +135,8 @@ docker ps
 
 3. In StoryFlow settings, set the Chatterbox endpoint to your local API (for example: `http://<local-ip>:5123`).
 
+4. Create a voice through the api with a provided example in [/assets/voices/female_shadowheart4.flac]
+
 #### Chatterbox troubleshooting (missing `peft`)
 
 If you see this in the Chatterbox container logs:
