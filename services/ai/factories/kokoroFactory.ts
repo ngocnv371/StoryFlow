@@ -2,6 +2,7 @@ import { AppConfig, Story } from '../../../types';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
+import { runAsyncJob } from '../asyncJob';
 
 type KokoroJsonResponse = {
   id?: string;
@@ -19,8 +20,6 @@ type KokoroJsonResponse = {
 
 const KOKORO_POLL_INTERVAL_MS = 1200;
 const KOKORO_MAX_POLL_ATTEMPTS = 90;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const asNonEmptyString = (value: unknown): string | null => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
@@ -102,6 +101,56 @@ const getPredictionStatusUrl = (endpoint: string, id: string): string => {
   return endpointUrl.toString();
 };
 
+type KokoroCreateResponse = {
+  payload: KokoroJsonResponse | null;
+  directAudio: GeneratedAudio | null;
+  responseDuration: number | null;
+};
+
+const resolveAudioFromKokoroPayload = async (
+  payload: KokoroJsonResponse,
+  endpoint: string,
+  story: Story,
+  fallbackDuration: number | null,
+): Promise<GeneratedAudio | null> => {
+  const payloadDuration = asPositiveNumber(payload.duration) ?? asPositiveNumber(payload.durationSeconds);
+
+  const outputDataUri = extractOutputDataUri(payload);
+  if (outputDataUri) {
+    const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.wav`, outputDataUri, 'audio/wav');
+    return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? 0 };
+  }
+
+  const outputUrl = extractOutputUrl(payload, endpoint);
+  if (outputUrl) {
+    try {
+      const audioResponse = await fetch(outputUrl);
+      if (!audioResponse.ok) {
+        throw new Error();
+      }
+
+      const audioBlob = await audioResponse.blob();
+      const audioMime = audioBlob.type || 'audio/wav';
+      const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
+      const uploadedUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, audioMime);
+      const estimatedDuration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
+      return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? estimatedDuration };
+    } catch {
+      return { url: outputUrl, duration: payloadDuration ?? fallbackDuration ?? 0 };
+    }
+  }
+
+  const base64Audio = asNonEmptyString(payload.audioBase64) || asNonEmptyString(payload.base64);
+  if (base64Audio) {
+    const audioMime = asNonEmptyString(payload.mimeType) || asNonEmptyString(payload.contentType) || 'audio/wav';
+    const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
+    const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.${extension}`, base64Audio, audioMime);
+    return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? 0 };
+  }
+
+  return null;
+};
+
 export class KokoroAIGenerationFactory implements AIGenerationFactory {
   async generateText(_config: AppConfig, _storyDetails: Story): Promise<GeneratedStoryText> {
     throw new Error('Kokoro provider supports narration only. Use Gemini or OpenAI compatible for text.');
@@ -142,139 +191,101 @@ export class KokoroAIGenerationFactory implements AIGenerationFactory {
     const voice = (config.audioGen.voice || (story.metadata?.voice as string) || 'af_bella').trim();
     const speed = config.audioGen.speed ?? 1;
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        input: {
-          text: transcript,
-          voice,
-          speed,
-        }
-      }),
-    });
+    return await runAsyncJob<KokoroCreateResponse, KokoroJsonResponse, GeneratedAudio>({
+      createJob: async () => {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            input: {
+              text: transcript,
+              voice,
+              speed,
+            }
+          }),
+        });
 
-    if (!response.ok) {
-      let details = '';
-      try {
-        const body = await response.text();
-        details = body ? ` - ${body}` : '';
-      } catch {
-      }
-      throw new Error(`Kokoro request failed (${response.status})${details}`);
-    }
-
-    const contentType = response.headers.get('content-type')?.toLowerCase() || '';
-    if (contentType.startsWith('audio/')) {
-      const audioBlob = await response.blob();
-      const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
-      const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
-      const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
-      return { url: audioUrl, duration };
-    }
-
-    const data = (await response.json()) as KokoroJsonResponse;
-    const responseDuration = asPositiveNumber(data.duration) ?? asPositiveNumber(data.durationSeconds);
-
-    const outputDataUri = extractOutputDataUri(data);
-    if (outputDataUri) {
-      const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.wav`, outputDataUri, 'audio/wav');
-      return { url: uploadedUrl, duration: responseDuration ?? 0 };
-    }
-
-    const immediateUrl = extractOutputUrl(data, endpoint);
-    if (immediateUrl) {
-      try {
-        const audioResponse = await fetch(immediateUrl);
-        if (!audioResponse.ok) {
-          throw new Error();
-        }
-
-        const audioBlob = await audioResponse.blob();
-        const audioMime = audioBlob.type || 'audio/wav';
-        const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-        const uploadedUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, audioMime);
-        const estimatedDuration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
-        return { url: uploadedUrl, duration: responseDuration ?? estimatedDuration };
-      } catch {
-        return { url: immediateUrl, duration: responseDuration ?? 0 };
-      }
-    }
-
-    const base64Audio = asNonEmptyString(data.audioBase64) || asNonEmptyString(data.base64);
-    if (base64Audio) {
-      const audioMime = asNonEmptyString(data.mimeType) || asNonEmptyString(data.contentType) || 'audio/wav';
-      const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-      const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.${extension}`, base64Audio, audioMime);
-      return { url: uploadedUrl, duration: responseDuration ?? 0 };
-    }
-
-    const predictionId = asNonEmptyString(data.id);
-    if (!predictionId) {
-      throw new Error('Kokoro response did not include audio output or prediction id.');
-    }
-
-    const statusUrl = getPredictionStatusUrl(endpoint, predictionId);
-
-    for (let attempt = 0; attempt < KOKORO_MAX_POLL_ATTEMPTS; attempt += 1) {
-      await sleep(KOKORO_POLL_INTERVAL_MS);
-
-      const statusResponse = await fetch(statusUrl, {
-        method: 'GET',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (!statusResponse.ok) {
-        let details = '';
-        try {
-          const body = await statusResponse.text();
-          details = body ? ` - ${body}` : '';
-        } catch {
-        }
-        throw new Error(`Kokoro status request failed (${statusResponse.status})${details}`);
-      }
-
-      const statusData = (await statusResponse.json()) as KokoroJsonResponse;
-      const status = asNonEmptyString(statusData.status)?.toLowerCase();
-
-      const statusOutputDataUri = extractOutputDataUri(statusData);
-      if (statusOutputDataUri) {
-        const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.wav`, statusOutputDataUri, 'audio/wav');
-        const statusDuration = asPositiveNumber(statusData.duration) ?? asPositiveNumber(statusData.durationSeconds);
-        return { url: uploadedUrl, duration: statusDuration ?? responseDuration ?? 0 };
-      }
-
-      const outputUrl = extractOutputUrl(statusData, endpoint);
-
-      if (outputUrl) {
-        try {
-          const audioResponse = await fetch(outputUrl);
-          if (!audioResponse.ok) {
-            throw new Error();
+        if (!response.ok) {
+          let details = '';
+          try {
+            const body = await response.text();
+            details = body ? ` - ${body}` : '';
+          } catch {
           }
-
-          const audioBlob = await audioResponse.blob();
-          const audioMime = audioBlob.type || 'audio/wav';
-          const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-          const uploadedUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, audioMime);
-          const estimatedDuration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
-          const statusDuration = asPositiveNumber(statusData.duration) ?? asPositiveNumber(statusData.durationSeconds);
-          return { url: uploadedUrl, duration: statusDuration ?? responseDuration ?? estimatedDuration };
-        } catch {
-          return { url: outputUrl, duration: responseDuration ?? 0 };
+          throw new Error(`Kokoro request failed (${response.status})${details}`);
         }
-      }
 
-      if (status === 'failed' || status === 'error' || status === 'canceled' || status === 'cancelled') {
-        throw new Error('Kokoro generation failed.');
-      }
+        const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+        if (contentType.startsWith('audio/')) {
+          const audioBlob = await response.blob();
+          const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
+          const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
+          const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
+          return {
+            payload: null,
+            directAudio: { url: audioUrl, duration },
+            responseDuration: duration,
+          };
+        }
 
-      if (status === 'completed' || status === 'succeeded') {
-        break;
-      }
-    }
+        const payload = (await response.json()) as KokoroJsonResponse;
+        const responseDuration = asPositiveNumber(payload.duration) ?? asPositiveNumber(payload.durationSeconds);
+        return {
+          payload,
+          directAudio: null,
+          responseDuration,
+        };
+      },
+      getJobId: (createResponse) => asNonEmptyString(createResponse.payload?.id),
+      getImmediateResult: async (createResponse) => {
+        if (createResponse.directAudio) {
+          return createResponse.directAudio;
+        }
 
-    throw new Error('Timed out waiting for Kokoro audio output.');
+        if (!createResponse.payload) {
+          return null;
+        }
+
+        return await resolveAudioFromKokoroPayload(
+          createResponse.payload,
+          endpoint,
+          story,
+          createResponse.responseDuration,
+        );
+      },
+      fetchStatus: async (jobId) => {
+        const statusResponse = await fetch(getPredictionStatusUrl(endpoint, jobId), {
+          method: 'GET',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        if (!statusResponse.ok) {
+          let details = '';
+          try {
+            const body = await statusResponse.text();
+            details = body ? ` - ${body}` : '';
+          } catch {
+          }
+          throw new Error(`Kokoro status request failed (${statusResponse.status})${details}`);
+        }
+
+        return (await statusResponse.json()) as KokoroJsonResponse;
+      },
+      getStatusResult: async (statusResponse, _jobId) => {
+        const responseDuration = asPositiveNumber(statusResponse.duration) ?? asPositiveNumber(statusResponse.durationSeconds);
+        return await resolveAudioFromKokoroPayload(statusResponse, endpoint, story, responseDuration);
+      },
+      hasFailedStatus: (statusResponse) => {
+        const status = asNonEmptyString(statusResponse.status)?.toLowerCase();
+        return status === 'failed' || status === 'error' || status === 'canceled' || status === 'cancelled';
+      },
+      getFailureMessage: () => 'Kokoro generation failed.',
+      maxPollAttempts: KOKORO_MAX_POLL_ATTEMPTS,
+      pollIntervalMs: KOKORO_POLL_INTERVAL_MS,
+      delayBeforeFirstPoll: true,
+      missingJobIdError: 'Kokoro response did not include audio output or prediction id.',
+      timeoutError: () => 'Timed out waiting for Kokoro audio output.',
+    });
   }
 
   async generateMusic(_config: AppConfig, _story: Story): Promise<string> {

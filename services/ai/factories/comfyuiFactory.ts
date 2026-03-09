@@ -2,14 +2,13 @@ import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
 import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
+import { runAsyncJob } from '../asyncJob';
 import comfyZImageWorkflow from './comfy-zimage.json';
 import comfySD35Workflow from './comfy-image-sd35.json';
 import comfyMusicWorkflow from './comfy-music.json';
 
 const COMFY_POLL_INTERVAL_MS = 1500;
 const COMFY_MAX_POLL_ATTEMPTS = 80;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function asNonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
@@ -199,12 +198,11 @@ function hasFailedStatus(data: any, promptId: string): boolean {
   return candidateStatuses.some((value) => value.includes('error') || value.includes('fail'));
 }
 
-async function pollForComfyImage(
+async function fetchComfyPollData(
   endpoint: string,
   headers: Record<string, string>,
   promptId: string,
-  storyId: string,
-): Promise<string> {
+): Promise<any> {
   const authHeaders: Record<string, string> = {};
   if (headers.Authorization) {
     authHeaders.Authorization = headers.Authorization;
@@ -218,128 +216,33 @@ async function pollForComfyImage(
   endpointQueryUrl.searchParams.set('prompt_id', promptId);
   const pollUrls = [historyByIdUrl, historyQueryUrl.toString(), endpointQueryUrl.toString()];
 
-  for (let attempt = 0; attempt < COMFY_MAX_POLL_ATTEMPTS; attempt += 1) {
-    let lastPingError: string | null = null;
+  let lastPingError: string | null = null;
 
-    for (const pollUrl of pollUrls) {
-      try {
-        const response = await fetch(pollUrl, {
-          method: 'GET',
-          headers: authHeaders,
-        });
+  for (const pollUrl of pollUrls) {
+    try {
+      const response = await fetch(pollUrl, {
+        method: 'GET',
+        headers: authHeaders,
+      });
 
-        if (!response.ok) {
-          let details = '';
-          try {
-            const body = await response.text();
-            details = body ? ` - ${body}` : '';
-          } catch {
-            // ignore response-body parsing errors for ping failure details
-          }
-          lastPingError = `Ping request failed (${response.status}) at ${pollUrl}${details}`;
-          continue;
+      if (!response.ok) {
+        let details = '';
+        try {
+          const body = await response.text();
+          details = body ? ` - ${body}` : '';
+        } catch {
         }
-
-        const data = await response.json();
-        const image = await extractImageResult(data, endpoint, storyId, promptId);
-        if (image) {
-          return image;
-        }
-
-        if (hasFailedStatus(data, promptId)) {
-          throw new Error(`ComfyUI generation failed for prompt_id ${promptId}.`);
-        }
-
-        lastPingError = null;
-        break;
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('generation failed')) {
-          throw error;
-        }
-
-        lastPingError = error instanceof Error ? `Ping request failed at ${pollUrl}: ${error.message}` : `Ping request failed at ${pollUrl}.`;
+        lastPingError = `Ping request failed (${response.status}) at ${pollUrl}${details}`;
+        continue;
       }
-    }
 
-    if (lastPingError) {
-      throw new Error(`ComfyUI ping failed for prompt_id ${promptId}. ${lastPingError}`);
+      return await response.json();
+    } catch (error) {
+      lastPingError = error instanceof Error ? `Ping request failed at ${pollUrl}: ${error.message}` : `Ping request failed at ${pollUrl}.`;
     }
-
-    await sleep(COMFY_POLL_INTERVAL_MS);
   }
 
-  throw new Error(`Timed out waiting for ComfyUI image result for prompt_id ${promptId}.`);
-}
-
-async function pollForComfyMusic(
-  endpoint: string,
-  headers: Record<string, string>,
-  promptId: string,
-  storyId: string,
-): Promise<string> {
-  const authHeaders: Record<string, string> = {};
-  if (headers.Authorization) {
-    authHeaders.Authorization = headers.Authorization;
-  }
-
-  const historyByIdUrl = buildSiblingPathUrl(endpoint, 'history', encodeURIComponent(promptId));
-  const historyQueryUrl = new URL(buildSiblingPathUrl(endpoint, 'history'));
-  historyQueryUrl.searchParams.set('prompt_id', promptId);
-
-  const endpointQueryUrl = new URL(endpoint);
-  endpointQueryUrl.searchParams.set('prompt_id', promptId);
-  const pollUrls = [historyByIdUrl, historyQueryUrl.toString(), endpointQueryUrl.toString()];
-
-  for (let attempt = 0; attempt < COMFY_MAX_POLL_ATTEMPTS; attempt += 1) {
-    let lastPingError: string | null = null;
-
-    for (const pollUrl of pollUrls) {
-      try {
-        const response = await fetch(pollUrl, {
-          method: 'GET',
-          headers: authHeaders,
-        });
-
-        if (!response.ok) {
-          let details = '';
-          try {
-            const body = await response.text();
-            details = body ? ` - ${body}` : '';
-          } catch {
-          }
-          lastPingError = `Ping request failed (${response.status}) at ${pollUrl}${details}`;
-          continue;
-        }
-
-        const data = await response.json();
-        const music = await extractMusicResult(data, endpoint, storyId, promptId);
-        if (music) {
-          return music;
-        }
-
-        if (hasFailedStatus(data, promptId)) {
-          throw new Error(`ComfyUI music generation failed for prompt_id ${promptId}.`);
-        }
-
-        lastPingError = null;
-        break;
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('generation failed')) {
-          throw error;
-        }
-
-        lastPingError = error instanceof Error ? `Ping request failed at ${pollUrl}: ${error.message}` : `Ping request failed at ${pollUrl}.`;
-      }
-    }
-
-    if (lastPingError) {
-      throw new Error(`ComfyUI ping failed for prompt_id ${promptId}. ${lastPingError}`);
-    }
-
-    await sleep(COMFY_POLL_INTERVAL_MS);
-  }
-
-  throw new Error(`Timed out waiting for ComfyUI music result for prompt_id ${promptId}.`);
+  throw new Error(`ComfyUI ping failed for prompt_id ${promptId}. ${lastPingError ?? 'No polling endpoint returned a successful response.'}`);
 }
 
 function createZImageWorkflow(story: Story, config: AppConfig) {
@@ -403,36 +306,46 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     }
 
     try {
-      const response = await fetch(config.comfy.endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          prompt: createZImageWorkflow(story, config),
-          storyId: story.id,
-          aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
-          width: config.imageGen.width,
-          height: config.imageGen.height,
-          cfg: config.imageGen.cfg,
-          model: config.comfy.model,
-        }),
+      return await runAsyncJob<any, any, string>({
+        createJob: async () => {
+          const response = await fetch(config.comfy.endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              prompt: createZImageWorkflow(story, config),
+              storyId: story.id,
+              aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
+              width: config.imageGen.width,
+              height: config.imageGen.height,
+              cfg: config.imageGen.cfg,
+              model: config.comfy.model,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`ComfyUI request failed (${response.status}): ${response.statusText}`);
+          }
+
+          return await response.json();
+        },
+        getJobId: (createResponse) => getPromptId(createResponse),
+        getImmediateResult: async (createResponse) => {
+          return await extractImageResult(createResponse, config.comfy.endpoint, story.id);
+        },
+        fetchStatus: async (promptId) => {
+          return await fetchComfyPollData(config.comfy.endpoint, headers, promptId);
+        },
+        getStatusResult: async (statusResponse, promptId) => {
+          return await extractImageResult(statusResponse, config.comfy.endpoint, story.id, promptId);
+        },
+        hasFailedStatus: (statusResponse, promptId) => hasFailedStatus(statusResponse, promptId),
+        getFailureMessage: (_statusResponse, promptId) => `ComfyUI generation failed for prompt_id ${promptId}.`,
+        maxPollAttempts: COMFY_MAX_POLL_ATTEMPTS,
+        pollIntervalMs: COMFY_POLL_INTERVAL_MS,
+        delayBeforeFirstPoll: false,
+        missingJobIdError: 'ComfyUI response did not include image data or prompt_id for polling.',
+        timeoutError: (promptId) => `Timed out waiting for ComfyUI image result for prompt_id ${promptId}.`,
       });
-
-      if (!response.ok) {
-        throw new Error(`ComfyUI request failed (${response.status}): ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const immediateResult = await extractImageResult(data, config.comfy.endpoint, story.id);
-      if (immediateResult) {
-        return immediateResult;
-      }
-
-      const promptId = getPromptId(data);
-      if (promptId) {
-        return await pollForComfyImage(config.comfy.endpoint, headers, promptId, story.id);
-      }
-
-      throw new Error('ComfyUI response did not include image data or prompt_id for polling.');
     } catch (error: any) {
       console.error('ComfyUI image generation error details:', error);
       throw new Error(error.message || 'ComfyUI image generation failed.');
@@ -457,32 +370,42 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     }
 
     try {
-      const response = await fetch(config.comfy.endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          prompt: createMusicWorkflow(story),
-          storyId: story.id,
-          model: config.comfy.model,
-        }),
+      return await runAsyncJob<any, any, string>({
+        createJob: async () => {
+          const response = await fetch(config.comfy.endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              prompt: createMusicWorkflow(story),
+              storyId: story.id,
+              model: config.comfy.model,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`ComfyUI request failed (${response.status}): ${response.statusText}`);
+          }
+
+          return await response.json();
+        },
+        getJobId: (createResponse) => getPromptId(createResponse),
+        getImmediateResult: async (createResponse) => {
+          return await extractMusicResult(createResponse, config.comfy.endpoint, story.id);
+        },
+        fetchStatus: async (promptId) => {
+          return await fetchComfyPollData(config.comfy.endpoint, headers, promptId);
+        },
+        getStatusResult: async (statusResponse, promptId) => {
+          return await extractMusicResult(statusResponse, config.comfy.endpoint, story.id, promptId);
+        },
+        hasFailedStatus: (statusResponse, promptId) => hasFailedStatus(statusResponse, promptId),
+        getFailureMessage: (_statusResponse, promptId) => `ComfyUI music generation failed for prompt_id ${promptId}.`,
+        maxPollAttempts: COMFY_MAX_POLL_ATTEMPTS,
+        pollIntervalMs: COMFY_POLL_INTERVAL_MS,
+        delayBeforeFirstPoll: false,
+        missingJobIdError: 'ComfyUI response did not include music data or prompt_id for polling.',
+        timeoutError: (promptId) => `Timed out waiting for ComfyUI music result for prompt_id ${promptId}.`,
       });
-
-      if (!response.ok) {
-        throw new Error(`ComfyUI request failed (${response.status}): ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const immediateResult = await extractMusicResult(data, config.comfy.endpoint, story.id);
-      if (immediateResult) {
-        return immediateResult;
-      }
-
-      const promptId = getPromptId(data);
-      if (promptId) {
-        return await pollForComfyMusic(config.comfy.endpoint, headers, promptId, story.id);
-      }
-
-      throw new Error('ComfyUI response did not include music data or prompt_id for polling.');
     } catch (error: any) {
       console.error('ComfyUI music generation error details:', error);
       throw new Error(error.message || 'ComfyUI music generation failed.');
