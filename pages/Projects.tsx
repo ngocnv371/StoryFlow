@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../store';
@@ -11,6 +11,7 @@ import { Story } from '@/types';
 
 type StatusFilter = Story['status'] | 'All';
 const MAX_VISIBLE_TAGS = 3;
+const ALL_TAGS_FILTER = 'All';
 
 const formatDuration = (duration?: number): string => {
   if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) {
@@ -32,6 +33,23 @@ const formatWordCount = (wordCount?: number): string => {
   return `${wordCount.toLocaleString()} words`;
 };
 
+function extractTags(stories: Story[]): { value: string; label: string }[] {
+  const tagsByNormalizedValue = new Map<string, string>();
+  stories.forEach((story) => {
+    story.tags.forEach((tag) => {
+      const normalizedTag = tag.trim().toLowerCase();
+      if (!normalizedTag) return;
+      if (!tagsByNormalizedValue.has(normalizedTag)) {
+        tagsByNormalizedValue.set(normalizedTag, tag.trim());
+      }
+    });
+  });
+
+  return Array.from(tagsByNormalizedValue.entries())
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
 const Projects: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -39,10 +57,17 @@ const Projects: React.FC = () => {
   const { items: stories, loading } = useSelector((state: RootState) => state.stories);
   const [isCreating, setIsCreating] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
+  const [tagFilter, setTagFilter] = useState(ALL_TAGS_FILTER);
 
-  const filteredStories = statusFilter === 'All'
-    ? stories
-    : stories.filter(story => story.status === statusFilter);
+  const availableTags = useMemo(() => extractTags(stories), [stories]);
+
+  const filteredStories = stories.filter((story) => {
+    const matchesStatus = statusFilter === 'All' || story.status === statusFilter;
+    const matchesTag = tagFilter === ALL_TAGS_FILTER
+      || story.tags.some((tag) => tag.trim().toLowerCase() === tagFilter);
+
+    return matchesStatus && matchesTag;
+  });
 
   useEffect(() => {
     dispatch(fetchStories());
@@ -108,7 +133,20 @@ const Projects: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label htmlFor="tag-filter" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tag</label>
+            <select
+              id="tag-filter"
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="px-3 py-2 border border-slate-600 rounded-xl bg-slate-800 text-sm text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            >
+              <option value={ALL_TAGS_FILTER}>{ALL_TAGS_FILTER}</option>
+              {availableTags.map((tag) => (
+                <option key={tag.value} value={tag.value}>{tag.label}</option>
+              ))}
+            </select>
+
             <label htmlFor="status-filter" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</label>
             <select
               id="status-filter"
@@ -126,7 +164,7 @@ const Projects: React.FC = () => {
 
           {filteredStories.length === 0 ? (
             <div className="text-center p-10 bg-slate-900 rounded-2xl border border-dashed border-slate-700">
-              <p className="text-slate-400 font-medium">No projects match the selected status.</p>
+              <p className="text-slate-400 font-medium">No projects match the selected filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
