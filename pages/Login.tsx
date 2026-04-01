@@ -63,7 +63,7 @@ const Login: React.FC = () => {
           
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 border border-slate-600 rounded-2xl bg-slate-800 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <input type="password" autoComplete={isSignUp ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} className="w-full p-4 border border-slate-600 rounded-2xl bg-slate-800 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
           
           <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">

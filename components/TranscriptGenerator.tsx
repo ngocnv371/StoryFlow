@@ -27,7 +27,7 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
     try {
       const { title, transcript, narrator, music, cover_prompt, tags } = await generateStoryTranscript(config, story);
       
-      const status = story.status === 'Draft' ? 'Pending' : story.status;
+      const status = story.status === 'draft' ? 'pending' : story.status;
       // Update remote storage with all fields
       await dispatch(updateStoryRemote({ ...story, title, transcript, narrator, music, cover_prompt, tags, status }));
       
@@ -61,7 +61,7 @@ const TranscriptGenerator: React.FC<TranscriptGeneratorProps> = ({ story, onGene
 
       const separator = story.transcript.trimEnd().length > 0 ? '\n\n' : '';
       const transcript = `${story.transcript.trimEnd()}${separator}${appended}`;
-      const status = story.status === 'Draft' ? 'Pending' : story.status;
+      const status = story.status === 'draft' ? 'pending' : story.status;
 
       await dispatch(updateStoryRemote({ ...story, transcript, status }));
 

@@ -155,10 +155,11 @@ const Projects: React.FC = () => {
               className="px-3 py-2 border border-slate-600 rounded-xl bg-slate-800 text-sm text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             >
               <option value="All">All</option>
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-              <option value="Archived">Archived</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 
@@ -184,8 +185,8 @@ const Projects: React.FC = () => {
                     </span>
                   )}
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-sm ${
-                    story.status === 'Completed' ? 'bg-emerald-500 text-white' :
-                    story.status === 'Pending' ? 'bg-amber-500 text-white' :
+                    story.status === 'done' ? 'bg-emerald-500 text-white' :
+                    story.status === 'pending' ? 'bg-amber-500 text-white' :
                     'bg-slate-700/80 text-white backdrop-blur-sm'
                   }`}>
                     {story.status}

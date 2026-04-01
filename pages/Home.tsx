@@ -23,15 +23,15 @@ const Home: React.FC = () => {
   
   const stats = [
     { label: 'Total Stories', value: stories.length, icon: '📚', color: 'bg-blue-500' },
-    { label: 'Pending Review', value: stories.filter(s => s.status === 'Pending').length, icon: '⏳', color: 'bg-amber-500' },
-    { label: 'Drafts', value: stories.filter(s => s.status === 'Draft').length, icon: '✍️', color: 'bg-indigo-500/70' },
-    { label: 'Completed', value: stories.filter(s => s.status === 'Completed').length, icon: '✅', color: 'bg-emerald-500' },
+    { label: 'Pending Review', value: stories.filter(s => s.status === 'pending').length, icon: '⏳', color: 'bg-amber-500' },
+    { label: 'Drafts', value: stories.filter(s => s.status === 'draft').length, icon: '✍️', color: 'bg-indigo-500/70' },
+    { label: 'Completed', value: stories.filter(s => s.status === 'done').length, icon: '✅', color: 'bg-emerald-500' },
   ];
 
   const chartData = [
-    { name: 'Draft', count: stories.filter(s => s.status === 'Draft').length, color: '#6366f1' },
-    { name: 'Pending', count: stories.filter(s => s.status === 'Pending').length, color: '#f59e0b' },
-    { name: 'Completed', count: stories.filter(s => s.status === 'Completed').length, color: '#10b981' },
+    { name: 'Draft', count: stories.filter(s => s.status === 'draft').length, color: '#6366f1' },
+    { name: 'Pending', count: stories.filter(s => s.status === 'pending').length, color: '#f59e0b' },
+    { name: 'Completed', count: stories.filter(s => s.status === 'done').length, color: '#10b981' },
   ];
 
   const handleCreateNew = async () => {
@@ -139,8 +139,8 @@ const Home: React.FC = () => {
                     <p className="text-xs text-slate-400">{new Date(story.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${
-                    story.status === 'Completed' ? 'bg-emerald-900/30 text-emerald-300' :
-                    story.status === 'Pending' ? 'bg-amber-900/30 text-amber-300' :
+                    story.status === 'done' ? 'bg-emerald-900/30 text-emerald-300' :
+                    story.status === 'pending' ? 'bg-amber-900/30 text-amber-300' :
                     'bg-slate-700 text-slate-300'
                   }`}>
                     {story.status}

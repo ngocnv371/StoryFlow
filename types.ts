@@ -1,4 +1,6 @@
 
+export type StoryStatus = 'draft' | 'pending' | 'done' | 'archived';
+
 export interface Story {
   id: string;
   user_id: string;
@@ -11,13 +13,23 @@ export interface Story {
   cover_prompt?: string;
   narrator?: string;
   music?: string;
-  status: 'Draft' | 'Pending' | 'Completed' | 'Archived';
+  status: StoryStatus;
   created_at: string;
   thumbnail_url: string;
   audio_url?: string;
   duration?: number;
   music_url?: string;
   video_url?: string;
+}
+
+export interface StoryRow {
+  id: string;
+  user_id: string;
+  title: string;
+  status: StoryStatus;
+  tags: string[] | null;
+  metadata?: StoryMetadata | null;
+  created_at: string;
 }
 
 export interface StoryGenerationOverrides {
@@ -27,6 +39,17 @@ export interface StoryGenerationOverrides {
 }
 
 export interface StoryMetadata {
+  summary?: string;
+  transcript?: string;
+  word_count?: number;
+  cover_prompt?: string;
+  narrator?: string;
+  music?: string;
+  thumbnail_url?: string;
+  audio_url?: string;
+  duration?: number;
+  music_url?: string;
+  video_url?: string;
   generationOverrides?: StoryGenerationOverrides;
   [key: string]: unknown;
 }

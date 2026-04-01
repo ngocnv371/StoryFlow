@@ -1,4 +1,6 @@
-import { AppConfig, Story, StoryGenerationOverrides, StoryMetadata } from '../types';
+import { AppConfig, Story, StoryGenerationOverrides, StoryMetadata, StoryRow } from '../types';
+
+export const DEFAULT_STORY_THUMBNAIL_URL = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop';
 
 const asObject = (value: unknown): Record<string, unknown> | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -6,6 +8,98 @@ const asObject = (value: unknown): Record<string, unknown> | null => {
   }
 
   return value as Record<string, unknown>;
+};
+
+const countWords = (text: string): number => {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+};
+
+const toOptionalText = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  return value.trim().length > 0 ? value : undefined;
+};
+
+const toOptionalNumber = (value: unknown): number | undefined => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return undefined;
+  }
+
+  return value;
+};
+
+const sanitizeStoryMetadata = (value: unknown): StoryMetadata => {
+  const metadata = asObject(value) ?? {};
+  const transcript = typeof metadata.transcript === 'string' ? metadata.transcript : '';
+  const wordCount = typeof metadata.word_count === 'number' && Number.isFinite(metadata.word_count)
+    ? metadata.word_count
+    : countWords(transcript);
+
+  return {
+    ...metadata,
+    summary: typeof metadata.summary === 'string' ? metadata.summary : '',
+    transcript,
+    word_count: wordCount,
+    cover_prompt: toOptionalText(metadata.cover_prompt),
+    narrator: toOptionalText(metadata.narrator),
+    music: toOptionalText(metadata.music),
+    thumbnail_url: toOptionalText(metadata.thumbnail_url) ?? DEFAULT_STORY_THUMBNAIL_URL,
+    audio_url: toOptionalText(metadata.audio_url),
+    duration: toOptionalNumber(metadata.duration),
+    music_url: toOptionalText(metadata.music_url),
+    video_url: toOptionalText(metadata.video_url),
+  };
+};
+
+export const normalizeStoryRow = (row: StoryRow): Story => {
+  const metadata = sanitizeStoryMetadata(row.metadata);
+
+  return {
+    ...row,
+    tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+    metadata,
+    summary: metadata.summary ?? '',
+    transcript: metadata.transcript ?? '',
+    word_count: metadata.word_count ?? 0,
+    cover_prompt: metadata.cover_prompt,
+    narrator: metadata.narrator,
+    music: metadata.music,
+    thumbnail_url: metadata.thumbnail_url ?? DEFAULT_STORY_THUMBNAIL_URL,
+    audio_url: metadata.audio_url,
+    duration: metadata.duration,
+    music_url: metadata.music_url,
+    video_url: metadata.video_url,
+  };
+};
+
+export const serializeStoryMetadata = (story: Pick<Story, 'summary' | 'transcript' | 'word_count' | 'cover_prompt' | 'narrator' | 'music' | 'thumbnail_url' | 'audio_url' | 'duration' | 'music_url' | 'video_url' | 'metadata'>): StoryMetadata => {
+  const existingMetadata = asObject(story.metadata) ?? {};
+  const transcript = typeof story.transcript === 'string' ? story.transcript : '';
+
+  return {
+    ...existingMetadata,
+    summary: story.summary,
+    transcript,
+    word_count: typeof story.word_count === 'number' && Number.isFinite(story.word_count)
+      ? story.word_count
+      : countWords(transcript),
+    cover_prompt: toOptionalText(story.cover_prompt),
+    narrator: toOptionalText(story.narrator),
+    music: toOptionalText(story.music),
+    thumbnail_url: toOptionalText(story.thumbnail_url) ?? DEFAULT_STORY_THUMBNAIL_URL,
+    audio_url: toOptionalText(story.audio_url),
+    duration: toOptionalNumber(story.duration),
+    music_url: toOptionalText(story.music_url),
+    video_url: toOptionalText(story.video_url),
+  };
+};
+
+export const createStoryDraft = (overrides: Partial<StoryMetadata> = {}): StoryMetadata => {
+  return sanitizeStoryMetadata(overrides);
 };
 
 export const getStoryGenerationOverrides = (story: Story): StoryGenerationOverrides => {

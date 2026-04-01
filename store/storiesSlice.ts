@@ -1,7 +1,8 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Story } from '../types';
+import { Story, StoryRow } from '../types';
 import { supabase } from '../supabaseClient';
+import { createStoryDraft, normalizeStoryRow, serializeStoryMetadata } from '../services/storyMetadata';
 
 interface StoriesState {
   items: Story[];
@@ -19,26 +20,13 @@ const storyListSelect = `
   id,
   user_id,
   title,
-  summary,
   metadata,
   tags,
-  cover_prompt,
-  narrator,
-  music,
   status,
-  created_at,
-  thumbnail_url,
-  audio_url,
-  duration,
-  music_url,
-  video_url,
-  word_count
+  created_at
 `;
 
-const storyDetailSelect = `
-  ${storyListSelect},
-  transcript
-`;
+const storyDetailSelect = storyListSelect;
 
 const countWords = (text: string): number => {
   const trimmed = text.trim();
@@ -48,40 +36,41 @@ const countWords = (text: string): number => {
 
 export const fetchStories = createAsyncThunk('stories/fetchAll', async () => {
   const { data, error } = await supabase
-    .from('stories')
+    .from('projects')
     .select(storyListSelect)
+    .eq('type', 'story')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data as Story[];
+  return (data as StoryRow[]).map(normalizeStoryRow);
 });
 
 export const fetchStoryById = createAsyncThunk('stories/fetchById', async (id: string) => {
   const { data, error } = await supabase
-    .from('stories')
+    .from('projects')
     .select(storyDetailSelect)
     .eq('id', id)
     .maybeSingle();
 
   if (error) throw error;
-  return data as Story | null;
+  return data ? normalizeStoryRow(data as StoryRow) : null;
 });
 
 export const createStoryRemote = createAsyncThunk('stories/create', async (userId: string) => {
   const { data, error } = await supabase
-    .from('stories')
+    .from('projects')
     .insert({
       user_id: userId,
       title: 'Untitled Story',
-      summary: 'A new story waiting to be told...',
       tags: ['draft'],
-      status: 'Draft',
-      thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
-      transcript: '',
-      word_count: 0,
+      type: 'story',
+      status: 'draft',
+      metadata: createStoryDraft({
+        summary: 'A new story waiting to be told...',
+      }),
     })
     .select(storyDetailSelect);
   if (error) throw error;
-  return data[0] as Story;
+  return normalizeStoryRow(data[0] as StoryRow);
 });
 
 const makeIdeaTitle = (idea: string, index: number): string => {
@@ -104,21 +93,21 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
     const rows = ideas.map((idea, index) => ({
       user_id: userId,
       title: makeIdeaTitle(idea, index),
-      summary: idea,
+      type: 'story',
       tags: ['idea', 'draft'],
-      status: 'Draft',
-      thumbnail_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop',
-      transcript: '',
-      word_count: 0,
+      status: 'draft',
+      metadata: createStoryDraft({
+        summary: idea,
+      }),
     }));
 
     const { data, error } = await supabase
-      .from('stories')
+      .from('projects')
       .insert(rows)
       .select(storyDetailSelect);
 
     if (error) throw error;
-    return data as Story[];
+    return (data as StoryRow[]).map(normalizeStoryRow);
   }
 );
 
@@ -126,35 +115,26 @@ export const updateStoryRemote = createAsyncThunk('stories/update', async (story
   const hasTranscript = typeof story.transcript === 'string';
   const transcript = hasTranscript ? story.transcript : '';
   const word_count = hasTranscript ? countWords(transcript) : (story.word_count ?? 0);
+  const metadata = serializeStoryMetadata({
+    ...story,
+    transcript,
+    word_count,
+  });
 
   const payload: Record<string, unknown> = {
     title: story.title,
-    summary: story.summary,
     tags: story.tags,
     status: story.status,
-    thumbnail_url: story.thumbnail_url,
-    audio_url: story.audio_url,
-    duration: story.duration,
-    music_url: story.music_url,
-    video_url: story.video_url,
-    narrator: story.narrator,
-    cover_prompt: story.cover_prompt,
-    music: story.music,
-    metadata: story.metadata,
-    word_count: word_count,
+    metadata,
   };
 
-  if (hasTranscript) {
-    payload.transcript = transcript;
-  }
-
   const { data, error } = await supabase
-    .from('stories')
+    .from('projects')
     .update(payload)
     .eq('id', story.id)
     .select(storyDetailSelect);
   if (error) throw error;
-  return data[0] as Story;
+  return normalizeStoryRow(data[0] as StoryRow);
 });
 
 const initialState: StoriesState = {

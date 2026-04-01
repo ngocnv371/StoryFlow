@@ -6,34 +6,65 @@ CREATE TABLE public.profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2. Create Stories Table
-CREATE TABLE public.stories (
+-- 2. Create Projects Table
+CREATE TABLE public.projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
-  summary TEXT,
-  metadata JSONB DEFAULT '{}'::jsonb,
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'pending', 'done', 'archived')),
   tags TEXT[] DEFAULT '{}',
-  transcript TEXT DEFAULT '',
-  word_count INTEGER DEFAULT 0,
-  cover_prompt TEXT,
-  narrator TEXT,
-  music TEXT,
-  status TEXT DEFAULT 'Draft' CHECK (status IN ('Draft', 'Pending', 'Completed', 'Archived')),
-  thumbnail_url TEXT,
-  audio_url TEXT,
-  duration INTEGER DEFAULT 0,
-  music_url TEXT,
-  video_url TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 0;
-ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS word_count INTEGER DEFAULT 0;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'projects'
+      AND column_name = 'summary'
+  ) THEN
+    EXECUTE $migration$
+      UPDATE public.projects
+      SET metadata = jsonb_strip_nulls(
+        COALESCE(metadata, '{}'::jsonb)
+        || jsonb_build_object(
+          'summary', summary,
+          'transcript', transcript,
+          'word_count', word_count,
+          'cover_prompt', cover_prompt,
+          'narrator', narrator,
+          'music', music,
+          'thumbnail_url', thumbnail_url,
+          'audio_url', audio_url,
+          'duration', duration,
+          'music_url', music_url,
+          'video_url', video_url
+        )
+      )
+    $migration$;
+  END IF;
+END
+$$;
+
+ALTER TABLE public.projects
+  DROP COLUMN IF EXISTS summary,
+  DROP COLUMN IF EXISTS transcript,
+  DROP COLUMN IF EXISTS word_count,
+  DROP COLUMN IF EXISTS cover_prompt,
+  DROP COLUMN IF EXISTS narrator,
+  DROP COLUMN IF EXISTS music,
+  DROP COLUMN IF EXISTS thumbnail_url,
+  DROP COLUMN IF EXISTS audio_url,
+  DROP COLUMN IF EXISTS duration,
+  DROP COLUMN IF EXISTS music_url,
+  DROP COLUMN IF EXISTS video_url;
 
 -- 3. Enable RLS on Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.stories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
 -- 4. Policies for Profiles
 CREATE POLICY "Users can view their own profile" ON public.profiles
@@ -42,17 +73,17 @@ CREATE POLICY "Users can view their own profile" ON public.profiles
 CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- 5. Policies for Stories
-CREATE POLICY "Users can view their own stories" ON public.stories
+-- 5. Policies for Projects
+CREATE POLICY "Users can view their own projects" ON public.projects
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own stories" ON public.stories
+CREATE POLICY "Users can insert their own projects" ON public.projects
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own stories" ON public.stories
+CREATE POLICY "Users can update their own projects" ON public.projects
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own stories" ON public.stories
+CREATE POLICY "Users can delete their own projects" ON public.projects
   FOR DELETE USING (auth.uid() = user_id);
 
 -- 6. Trigger for Profile Creation
