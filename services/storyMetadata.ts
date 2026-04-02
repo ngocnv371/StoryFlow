@@ -1,4 +1,5 @@
 import { AppConfig, Story, StoryGenerationOverrides, StoryMetadata, StoryRow } from '../types';
+import { deriveGeminiStandardAspectRatio, isGeminiStandardAspectRatio } from '../constants';
 
 export const DEFAULT_STORY_THUMBNAIL_URL = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop';
 
@@ -119,8 +120,14 @@ export const getStoryGenerationOverrides = (story: Story): StoryGenerationOverri
 
   return {
     cover: {
-      width: typeof coverRaw?.width === 'number' ? coverRaw.width : legacyWidth,
-      height: typeof coverRaw?.height === 'number' ? coverRaw.height : legacyHeight,
+      aspectRatio: (() => {
+        const coverAspectRatio = coverRaw?.aspectRatio;
+        if (isGeminiStandardAspectRatio(coverAspectRatio)) {
+          return coverAspectRatio;
+        }
+
+        return deriveGeminiStandardAspectRatio(legacyWidth, legacyHeight);
+      })(),
     },
     narration: {
       voice: typeof narrationRaw?.voice === 'string' ? narrationRaw.voice : legacyVoice,
@@ -140,8 +147,7 @@ export const resolveStoryConfig = (config: AppConfig, story: Story): AppConfig =
     ...config,
     imageGen: {
       ...config.imageGen,
-      width: overrides.cover?.width ?? config.imageGen.width,
-      height: overrides.cover?.height ?? config.imageGen.height,
+      aspectRatio: overrides.cover?.aspectRatio ?? config.imageGen.aspectRatio,
     },
     audioGen: {
       ...config.audioGen,

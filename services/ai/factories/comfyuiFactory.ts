@@ -1,6 +1,6 @@
 import { AppConfig, Story } from '../../../types';
 import { constructImagePrompt } from '../prompts';
-import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
+import { SUPABASE_IMAGE_BUCKET, SUPABASE_MUSIC_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { runAsyncJob } from '../asyncJob';
 import comfyZImageWorkflow from './comfy-zimage.json';
@@ -109,7 +109,7 @@ async function extractImageResult(
       const blob = await response.blob();
       const contentType = blob.type || 'image/png';
       const extension = contentType.includes('webp') ? 'webp' : contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png';
-      return await uploadToSupabase('thumbnails', `${storyId}.${extension}`, blob, contentType);
+      return await uploadToSupabase(SUPABASE_IMAGE_BUCKET, `${storyId}.${extension}`, blob, contentType);
     } catch {
       return url;
     }
@@ -128,7 +128,7 @@ async function extractImageResult(
     asNonEmptyString(data?.imageBase64) ||
     asNonEmptyString(data?.images?.[0]?.base64);
   if (base64) {
-    return await uploadBase64ToSupabase('thumbnails', `${storyId}.png`, base64, 'image/png');
+    return await uploadBase64ToSupabase(SUPABASE_IMAGE_BUCKET, `${storyId}.png`, base64, 'image/png');
   }
 
   const historyEntry = promptId ? data?.[promptId] : null;
@@ -170,7 +170,7 @@ async function extractMusicResult(
       const blob = await response.blob();
       const contentType = blob.type || 'audio/mpeg';
       const extension = contentType.includes('wav') ? 'wav' : 'mp3';
-      return await uploadToSupabase('music', `${storyId}.${extension}`, blob, contentType);
+      return await uploadToSupabase(SUPABASE_MUSIC_BUCKET, `${storyId}.${extension}`, blob, contentType);
     } catch {
       return outputUrl;
     }

@@ -4,6 +4,7 @@ import CoverGenerator from '../CoverGenerator';
 import { Story } from '../../types';
 import { RootState } from '../../store';
 import { getStoryGenerationOverrides, resolveStoryConfig, withStoryGenerationOverrides } from '../../services/storyMetadata';
+import { DEFAULT_GEMINI_STANDARD_ASPECT_RATIO, GEMINI_STANDARD_ASPECT_RATIOS } from '../../constants';
 
 interface CoverSectionProps {
   story: Story;
@@ -16,18 +17,13 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
   const storyConfig = resolveStoryConfig(config, story);
   const generationOverrides = getStoryGenerationOverrides(story);
 
-  const handleCoverSizeChange = (key: 'width' | 'height', rawValue: string) => {
-    const parsedValue = rawValue === '' ? undefined : Number(rawValue);
-    const safeValue = typeof parsedValue === 'number' && Number.isFinite(parsedValue) && parsedValue > 0
-      ? Math.round(parsedValue)
-      : undefined;
-
+  const handleCoverAspectRatioChange = (aspectRatio: string) => {
     onUpdate({
       metadata: withStoryGenerationOverrides(story, {
         ...generationOverrides,
         cover: {
           ...generationOverrides.cover,
-          [key]: safeValue,
+          aspectRatio: aspectRatio as (typeof GEMINI_STANDARD_ASPECT_RATIOS)[number],
         },
       }),
     });
@@ -51,30 +47,24 @@ const CoverSection: React.FC<CoverSectionProps> = ({ story, onUpdate, onOpenInsp
           onClick={handleResetCoverOverrides}
           className="text-xs text-indigo-600 font-semibold hover:text-indigo-300"
         >
-          Reset Cover Size
+          Reset Cover Aspect Ratio
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-800 rounded-xl border border-slate-600">
+      <div className="p-4 bg-slate-800 rounded-xl border border-slate-600">
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Width</label>
-          <input
-            type="number"
-            min={1}
-            value={storyConfig.imageGen.width ?? ''}
-            onChange={(event) => handleCoverSizeChange('width', event.target.value)}
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aspect Ratio</label>
+          <select
+            value={storyConfig.imageGen.aspectRatio ?? DEFAULT_GEMINI_STANDARD_ASPECT_RATIO}
+            onChange={(event) => handleCoverAspectRatioChange(event.target.value)}
             className="w-full p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Height</label>
-          <input
-            type="number"
-            min={1}
-            value={storyConfig.imageGen.height ?? ''}
-            onChange={(event) => handleCoverSizeChange('height', event.target.value)}
-            className="w-full p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-          />
+          >
+            {GEMINI_STANDARD_ASPECT_RATIOS.map((ratio) => (
+              <option key={ratio} value={ratio}>
+                {ratio}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { AppConfig, Story } from '../../../types';
-import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
+import { SUPABASE_AUDIO_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
 import { runAsyncJob } from '../asyncJob';
@@ -117,7 +117,7 @@ const resolveAudioFromKokoroPayload = async (
 
   const outputDataUri = extractOutputDataUri(payload);
   if (outputDataUri) {
-    const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.wav`, outputDataUri, 'audio/wav');
+    const uploadedUrl = await uploadBase64ToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.wav`, outputDataUri, 'audio/wav');
     return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? 0 };
   }
 
@@ -132,7 +132,7 @@ const resolveAudioFromKokoroPayload = async (
       const audioBlob = await audioResponse.blob();
       const audioMime = audioBlob.type || 'audio/wav';
       const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-      const uploadedUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, audioMime);
+      const uploadedUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, audioMime);
       const estimatedDuration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
       return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? estimatedDuration };
     } catch {
@@ -144,7 +144,7 @@ const resolveAudioFromKokoroPayload = async (
   if (base64Audio) {
     const audioMime = asNonEmptyString(payload.mimeType) || asNonEmptyString(payload.contentType) || 'audio/wav';
     const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-    const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.${extension}`, base64Audio, audioMime);
+    const uploadedUrl = await uploadBase64ToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, base64Audio, audioMime);
     return { url: uploadedUrl, duration: payloadDuration ?? fallbackDuration ?? 0 };
   }
 
@@ -219,7 +219,7 @@ export class KokoroAIGenerationFactory implements AIGenerationFactory {
         if (contentType.startsWith('audio/')) {
           const audioBlob = await response.blob();
           const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
-          const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
+          const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, contentType);
           const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
           return {
             payload: null,

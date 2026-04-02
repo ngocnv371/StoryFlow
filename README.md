@@ -91,6 +91,15 @@ This repo currently has Supabase URL/anon key defined directly in `supabaseClien
 
 Update these values to your own project before running in shared/public environments.
 
+Optional bucket env overrides (defaults shown):
+
+- `VITE_SUPABASE_PUBLIC_ASSETS_BUCKET=public-assets`
+- `VITE_SUPABASE_PRIVATE_ASSETS_BUCKET=private-assets`
+- `VITE_SUPABASE_IMAGE_BUCKET=public-assets`
+- `VITE_SUPABASE_AUDIO_BUCKET=public-assets`
+- `VITE_SUPABASE_MUSIC_BUCKET=public-assets`
+- `VITE_SUPABASE_VIDEO_BUCKET=public-assets`
+
 ### 3) Create database schema + storage
 
 Run `supabase_schema.sql` in your Supabase SQL editor.

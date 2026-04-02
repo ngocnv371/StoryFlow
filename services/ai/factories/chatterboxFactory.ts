@@ -1,5 +1,5 @@
 import { AppConfig, Story } from '../../../types';
-import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
+import { SUPABASE_AUDIO_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { TRANSCRIPT_SOFT_LIMIT } from '@/constants';
 import { runAsyncJob } from '../asyncJob';
@@ -115,7 +115,7 @@ const resolveAudioFromPayload = async (
       const audioBlob = await audioResponse.blob();
       const audioMime = audioBlob.type || 'audio/mpeg';
       const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-      const uploadedUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, audioMime);
+      const uploadedUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, audioMime);
       const estimatedDuration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
       return { url: uploadedUrl, duration: responseDuration ?? estimatedDuration };
     } catch {
@@ -127,7 +127,7 @@ const resolveAudioFromPayload = async (
   if (base64Audio) {
     const audioMime = asNonEmptyString(payload.mimeType) || asNonEmptyString(payload.contentType) || 'audio/wav';
     const extension = audioMime.includes('wav') ? 'wav' : audioMime.includes('ogg') ? 'ogg' : 'mp3';
-    const uploadedUrl = await uploadBase64ToSupabase('audio', `${story.id}.${extension}`, base64Audio, audioMime);
+    const uploadedUrl = await uploadBase64ToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, base64Audio, audioMime);
     return { url: uploadedUrl, duration: responseDuration ?? 0 };
   }
 
@@ -237,7 +237,7 @@ export class ChatterboxAIGenerationFactory implements AIGenerationFactory {
         console.debug(`${CHATTERBOX_LOG_PREFIX} direct audio stream received`, { storyId: story.id, contentType });
         const audioBlob = await response.blob();
         const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
-        const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
+        const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, contentType);
         const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
         return { url: audioUrl, duration };
       }
@@ -300,7 +300,7 @@ export class ChatterboxAIGenerationFactory implements AIGenerationFactory {
           console.debug(`${CHATTERBOX_LOG_PREFIX} async create returned audio directly`, { storyId: story.id, contentType });
           const audioBlob = await response.blob();
           const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
-          const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
+          const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, contentType);
           const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
           return { url: audioUrl, duration };
         }
@@ -349,7 +349,7 @@ export class ChatterboxAIGenerationFactory implements AIGenerationFactory {
           console.debug(`${CHATTERBOX_LOG_PREFIX} status returned audio stream`, { storyId: story.id, jobId, statusUrl, contentType });
           const audioBlob = await statusResponse.blob();
           const extension = contentType.includes('wav') ? 'wav' : contentType.includes('ogg') ? 'ogg' : 'mp3';
-          const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, contentType);
+          const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, contentType);
           const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
           return { __resolvedAudio: { url: audioUrl, duration } };
         }
@@ -384,7 +384,7 @@ export class ChatterboxAIGenerationFactory implements AIGenerationFactory {
           if (downloadContentType.startsWith('audio/')) {
             const audioBlob = await downloadResponse.blob();
             const extension = downloadContentType.includes('wav') ? 'wav' : downloadContentType.includes('ogg') ? 'ogg' : 'mp3';
-            const audioUrl = await uploadToSupabase('audio', `${story.id}.${extension}`, audioBlob, downloadContentType);
+            const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.${extension}`, audioBlob, downloadContentType);
             const duration = (await estimateDurationFromBlob(audioBlob)) ?? 0;
             return { __resolvedAudio: { url: audioUrl, duration } };
           }

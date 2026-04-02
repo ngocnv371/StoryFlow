@@ -1,5 +1,7 @@
 
-export type StoryStatus = 'draft' | 'pending' | 'done' | 'archived';
+import type { GeminiStandardAspectRatio } from './constants';
+
+export type StoryStatus = 'draft' | 'pending' | 'ready' | 'processing' | 'failed' | 'done' | 'archived';
 
 export interface Story {
   id: string;
@@ -33,7 +35,7 @@ export interface StoryRow {
 }
 
 export interface StoryGenerationOverrides {
-  cover?: Pick<ImageGenConfig, 'width' | 'height'>;
+  cover?: Pick<ImageGenConfig, 'aspectRatio'>;
   narration?: Pick<AudioGenConfig, 'voice' | 'speed'>;
   video?: Partial<VideoGenConfig>;
 }
@@ -99,6 +101,7 @@ export interface AudioGenConfig {
 }
 
 export interface ImageGenConfig {
+  aspectRatio?: GeminiStandardAspectRatio;
   width?: number;
   height?: number;
   cfg?: number;

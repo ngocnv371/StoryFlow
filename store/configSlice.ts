@@ -1,8 +1,17 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppConfig, GeminiConfig, ComfyConfig, OpenAICompatibleConfig, ChatterboxConfig, KokoroConfig, AudioGenConfig, ImageGenConfig, AIProvider, GenerationType, YouTubeConfig, VideoGenConfig } from '../types';
+import { DEFAULT_GEMINI_STANDARD_ASPECT_RATIO, deriveGeminiStandardAspectRatio, isGeminiStandardAspectRatio } from '../constants';
 
 const STORAGE_KEY = 'storyflow_config';
+
+const resolveImageAspectRatio = (parsed: any) => {
+  const storedRatio = parsed?.imageGen?.aspectRatio;
+  if (isGeminiStandardAspectRatio(storedRatio)) {
+    return storedRatio;
+  }
+  return deriveGeminiStandardAspectRatio(parsed?.imageGen?.width, parsed?.imageGen?.height);
+};
 
 const defaultState: AppConfig = {
   generationProviders: {
@@ -40,6 +49,7 @@ const defaultState: AppConfig = {
     speed: 1,
   },
   imageGen: {
+    aspectRatio: DEFAULT_GEMINI_STANDARD_ASPECT_RATIO,
     width: 1280,
     height: 720,
     cfg: 7,
@@ -130,7 +140,11 @@ const loadConfigFromStorage = (): AppConfig => {
           token: parsed.kokoro?.token ?? defaultState.kokoro.token,
         },
         audioGen: { ...defaultState.audioGen, ...parsed.audioGen },
-        imageGen: { ...defaultState.imageGen, ...parsed.imageGen },
+        imageGen: {
+          ...defaultState.imageGen,
+          ...parsed.imageGen,
+          aspectRatio: resolveImageAspectRatio(parsed),
+        },
         video: { ...defaultState.video, ...parsed.video },
         youtube: {
           ...defaultState.youtube,

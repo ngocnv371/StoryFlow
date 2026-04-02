@@ -2,9 +2,15 @@ import { GoogleGenAI, Modality } from '@google/genai';
 import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
 import { buildExtendTranscriptPrompt, buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
-import { uploadBase64ToSupabase, uploadToSupabase } from '../storage';
+import { SUPABASE_AUDIO_BUCKET, SUPABASE_IMAGE_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
-import { TEXT_GEN_MAX_OUTPUT_TOKENS, TRANSCRIPT_SOFT_LIMIT } from '@/constants';
+import {
+  DEFAULT_GEMINI_STANDARD_ASPECT_RATIO,
+  TEXT_GEN_MAX_OUTPUT_TOKENS,
+  TRANSCRIPT_SOFT_LIMIT,
+  deriveGeminiStandardAspectRatio,
+  isGeminiStandardAspectRatio,
+} from '@/constants';
 
 export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
@@ -125,9 +131,9 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateImage(config: AppConfig, story: Story): Promise<string> {
     const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
-    const requestedAspectRatio = config.imageGen.width && config.imageGen.height
-      ? `${config.imageGen.width}:${config.imageGen.height}`
-      : '16:9';
+    const requestedAspectRatio = isGeminiStandardAspectRatio(config.imageGen.aspectRatio)
+      ? config.imageGen.aspectRatio
+      : deriveGeminiStandardAspectRatio(config.imageGen.width, config.imageGen.height) || DEFAULT_GEMINI_STANDARD_ASPECT_RATIO;
 
     try {
       const response = await ai.models.generateContent({
@@ -149,7 +155,7 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
         throw new Error('No image data returned from model. It might be blocked by safety filters.');
       }
 
-      return await uploadBase64ToSupabase('thumbnails', `${story.id}.png`, base64, 'image/png');
+      return await uploadBase64ToSupabase(SUPABASE_IMAGE_BUCKET, `${story.id}.png`, base64, 'image/png');
     } catch (error: any) {
       console.error('Cover image generation error details:', error);
       throw new Error(error.message || 'Image generation failed.');
@@ -194,7 +200,7 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
       }
 
       const wavData = createWavHeader(pcmData, 24000);
-      const audioUrl = await uploadToSupabase('audio', `${story.id}.wav`, wavData, 'audio/wav');
+      const audioUrl = await uploadToSupabase(SUPABASE_AUDIO_BUCKET, `${story.id}.wav`, wavData, 'audio/wav');
       const durationSeconds = Math.round(pcmData.length / (24000 * 2));
       return { url: audioUrl, duration: durationSeconds };
     } catch (error: any) {

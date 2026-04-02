@@ -17,6 +17,8 @@ const StoryStatusSelect: React.FC<StoryStatusSelectProps> = ({ value, onChange, 
       <option value="draft">Draft</option>
       <option value="pending">Pending</option>
       <option value="ready">Ready</option>
+      <option value="processing">Processing</option>
+      <option value="failed">Failed</option>
       <option value="done">Done</option>
       <option value="archived">Archived</option>
     </select>

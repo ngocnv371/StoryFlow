@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { setGenerationProvider, setImageGenConfig } from '../../store/configSlice';
 import { AIProvider } from '../../types';
+import { DEFAULT_GEMINI_STANDARD_ASPECT_RATIO, GEMINI_STANDARD_ASPECT_RATIOS } from '../../constants';
 
 const ImageGenSettingsTab: React.FC = () => {
   const dispatch = useDispatch();
@@ -23,33 +24,18 @@ const ImageGenSettingsTab: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-200 mb-1">Width</label>
-        <input
-          type="number"
-          min="256"
-          step="64"
-          value={config.imageGen.width ?? 1280}
-          onChange={(e) => {
-            const width = Number.parseInt(e.target.value, 10);
-            dispatch(setImageGenConfig({ width: Number.isNaN(width) ? 1280 : width }));
-          }}
+        <label className="block text-sm font-medium text-slate-200 mb-1">Aspect Ratio</label>
+        <select
+          value={config.imageGen.aspectRatio ?? DEFAULT_GEMINI_STANDARD_ASPECT_RATIO}
+          onChange={(e) => dispatch(setImageGenConfig({ aspectRatio: e.target.value as (typeof GEMINI_STANDARD_ASPECT_RATIOS)[number] }))}
           className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-200 mb-1">Height</label>
-        <input
-          type="number"
-          min="256"
-          step="64"
-          value={config.imageGen.height ?? 720}
-          onChange={(e) => {
-            const height = Number.parseInt(e.target.value, 10);
-            dispatch(setImageGenConfig({ height: Number.isNaN(height) ? 720 : height }));
-          }}
-          className="w-full p-2 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-        />
+        >
+          {GEMINI_STANDARD_ASPECT_RATIOS.map((ratio) => (
+            <option key={ratio} value={ratio}>
+              {ratio}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>
