@@ -3,6 +3,11 @@ import { constructImagePrompt } from '../prompts';
 import { SUPABASE_IMAGE_BUCKET, SUPABASE_MUSIC_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import { runAsyncJob } from '../asyncJob';
+import {
+  DEFAULT_GEMINI_STANDARD_ASPECT_RATIO,
+  deriveGeminiStandardAspectRatio,
+  isGeminiStandardAspectRatio,
+} from '@/constants';
 import comfyZImageWorkflow from './comfy-zimage.json';
 import comfySD35Workflow from './comfy-image-sd35.json';
 import comfyMusicWorkflow from './comfy-music.json';
@@ -247,26 +252,56 @@ async function fetchComfyPollData(
 
 function createZImageWorkflow(story: Story, config: AppConfig) {
   const prompt = constructImagePrompt(story);
+  const { width, height } = resolveComfyImageSize(config);
 
   const workflow = JSON.parse(JSON.stringify(comfyZImageWorkflow));
   // the indexes "6" and "13" are based on the structure of comfy-zimage.json and may need to be updated if the workflow changes
   workflow["3"].inputs.seed = Math.floor(Math.random() * 1000000);
   workflow["6"].inputs.text = prompt;
-  workflow["13"].inputs.width = config.imageGen.width || 512;
-  workflow["13"].inputs.height = config.imageGen.height || 512;
+  workflow["13"].inputs.width = width;
+  workflow["13"].inputs.height = height;
   return workflow;
 }
 
 function createSD35ImageWorkflow(story: Story, config: AppConfig) {
   const prompt = constructImagePrompt(story);
+  const { width, height } = resolveComfyImageSize(config);
 
   const workflow = JSON.parse(JSON.stringify(comfySD35Workflow));
   // the indexes "6" and "5" are based on the structure of comfy-sample-flow.json and may need to be updated if the workflow changes
   workflow["3"].inputs.seed = Math.floor(Math.random() * 1000000);
   workflow["6"].inputs.text = prompt;
-  workflow["5"].inputs.width = config.imageGen.width || 512;
-  workflow["5"].inputs.height = config.imageGen.height || 512;
+  workflow["5"].inputs.width = width;
+  workflow["5"].inputs.height = height;
   return workflow;
+}
+
+function resolveComfyImageSize(config: AppConfig): { width: number; height: number } {
+  const fallbackWidth = config.imageGen.width || 512;
+  const fallbackHeight = config.imageGen.height || 512;
+
+  const resolvedAspectRatio = isGeminiStandardAspectRatio(config.imageGen.aspectRatio)
+    ? config.imageGen.aspectRatio
+    : deriveGeminiStandardAspectRatio(config.imageGen.width, config.imageGen.height) || DEFAULT_GEMINI_STANDARD_ASPECT_RATIO;
+
+  const [ratioWidth, ratioHeight] = resolvedAspectRatio.split(':').map(Number);
+  if (!ratioWidth || !ratioHeight) {
+    return {
+      width: fallbackWidth,
+      height: fallbackHeight,
+    };
+  }
+
+  const shortEdge = Math.max(64, Math.min(fallbackWidth, fallbackHeight));
+  const rawWidth = ratioWidth >= ratioHeight ? (shortEdge * ratioWidth) / ratioHeight : shortEdge;
+  const rawHeight = ratioWidth >= ratioHeight ? shortEdge : (shortEdge * ratioHeight) / ratioWidth;
+
+  const snapToMultipleOf8 = (value: number): number => Math.max(64, Math.round(value / 8) * 8);
+
+  return {
+    width: snapToMultipleOf8(rawWidth),
+    height: snapToMultipleOf8(rawHeight),
+  };
 }
 
 function createMusicWorkflow(story: Story): Record<string, any> {
@@ -297,6 +332,8 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
       throw new Error('ComfyUI endpoint is required for image generation.');
     }
 
+    const { width, height } = resolveComfyImageSize(config);
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -314,9 +351,8 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
             body: JSON.stringify({
               prompt: createZImageWorkflow(story, config),
               storyId: story.id,
-              aspectRatio: config.imageGen.width && config.imageGen.height ? `${config.imageGen.width}:${config.imageGen.height}` : '16:9',
-              width: config.imageGen.width,
-              height: config.imageGen.height,
+              width,
+              height,
               cfg: config.imageGen.cfg,
               model: config.comfy.model,
             }),
