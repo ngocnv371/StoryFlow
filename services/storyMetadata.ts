@@ -1,4 +1,4 @@
-import { AppConfig, Story, StoryGenerationOverrides, StoryMetadata, StoryRow } from '../types';
+import { AppConfig, Story, StoryGenerationOverrides, StoryMetadata, StoryRow, StoryTranscriptForm } from '../types';
 import { deriveGeminiStandardAspectRatio, isGeminiStandardAspectRatio } from '../constants';
 
 export const DEFAULT_STORY_THUMBNAIL_URL = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop';
@@ -33,6 +33,14 @@ const toOptionalNumber = (value: unknown): number | undefined => {
   return value;
 };
 
+const toStoryTranscriptForm = (value: unknown): StoryTranscriptForm => {
+  if (value === 'short') {
+    return 'short';
+  }
+
+  return 'long';
+};
+
 const sanitizeStoryMetadata = (value: unknown): StoryMetadata => {
   const metadata = asObject(value) ?? {};
   const transcript = typeof metadata.transcript === 'string' ? metadata.transcript : '';
@@ -45,6 +53,7 @@ const sanitizeStoryMetadata = (value: unknown): StoryMetadata => {
     summary: typeof metadata.summary === 'string' ? metadata.summary : '',
     transcript,
     word_count: wordCount,
+    transcript_form: toStoryTranscriptForm(metadata.transcript_form),
     cover_prompt: toOptionalText(metadata.cover_prompt),
     narrator: toOptionalText(metadata.narrator),
     music: toOptionalText(metadata.music),

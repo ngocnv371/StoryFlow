@@ -16,14 +16,19 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
   async generateText(config: AppConfig, storyDetails: Story): Promise<GeneratedStoryText> {
     const apiKey = config.gemini.apiKey || process.env.API_KEY || '';
     const ai = new GoogleGenAI({ apiKey });
+    const isShortForm = storyDetails.metadata?.transcript_form === 'short';
 
     try {
       const response = await ai.models.generateContent({
         model: config.gemini.textModel || 'gemini-3-flash-preview',
         contents: buildTranscriptPrompt(storyDetails),
-        config: {
-          maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
-        },
+        ...(isShortForm
+          ? {}
+          : {
+            config: {
+              maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
+            },
+          }),
       });
 
       if (!response.text) {

@@ -1,6 +1,9 @@
 import { Story } from '../../types';
 
-export const buildTranscriptPrompt = (storyDetails: Story): string => `Generate a dramatic story transcript meant for narration using TTS service.
+export const buildTranscriptPrompt = (storyDetails: Story): string => {
+  const isShortForm = storyDetails.metadata?.transcript_form === 'short';
+
+  return `Generate a dramatic story transcript meant for narration using TTS service.
 
 Title: ${storyDetails.title}
 Summary: ${storyDetails.summary}
@@ -16,7 +19,9 @@ IMPORTANT INSTRUCTIONS:
 
 2. Generate tags in YouTube style: concise, searchable keywords that capture genres, themes, moods, and related topics.
 
-3. The transcript should be at least 3000 words in multiple paragraphs of pure narration text only - no stage directions, no formatting, no metadata.
+3. ${isShortForm
+  ? 'The transcript should be short-form, concise, and narration-only in multiple paragraphs. Keep it focused and compact (no stage directions, no formatting, no metadata).'
+  : 'The transcript should be at least 3000 words in multiple paragraphs of pure narration text only - no stage directions, no formatting, no metadata.'}
 
 Example format:
 {
@@ -27,6 +32,7 @@ Example format:
   "cover_prompt": "Cinematic sci-fi cover art of a lone guardian on a shattered moon, luminous nebula sky, dramatic rim lighting, high-detail digital painting",
   "transcript": "Once upon a time in a distant galaxy...",
 }`;
+};
 
 export const constructImagePrompt = (story: Story): string => story.cover_prompt || `Artistic, cinematic cover art for a story. 
 Title: ${story.title}. 

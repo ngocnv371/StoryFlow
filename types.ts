@@ -40,10 +40,13 @@ export interface StoryGenerationOverrides {
   video?: Partial<VideoGenConfig>;
 }
 
+export type StoryTranscriptForm = 'long' | 'short';
+
 export interface StoryMetadata {
   summary?: string;
   transcript?: string;
   word_count?: number;
+  transcript_form?: StoryTranscriptForm;
   cover_prompt?: string;
   narrator?: string;
   music?: string;
