@@ -171,6 +171,27 @@ export const resolveStoryConfig = (config: AppConfig, story: Story): AppConfig =
   };
 };
 
+export const buildStoryGenerationOverridesFromConfig = (config: AppConfig): StoryGenerationOverrides => {
+  return {
+    cover: {
+      aspectRatio: config.imageGen.aspectRatio,
+    },
+    narration: {
+      voice: config.audioGen.voice,
+      speed: config.audioGen.speed,
+    },
+    video: {
+      enableKenBurns: config.video.enableKenBurns,
+      enableParticles: config.video.enableParticles,
+    },
+  };
+};
+
+export const buildStoryGenerationOverridesSnapshot = (config: AppConfig, story: Story): StoryGenerationOverrides => {
+  const effectiveConfig = resolveStoryConfig(config, story);
+  return buildStoryGenerationOverridesFromConfig(effectiveConfig);
+};
+
 export const withStoryGenerationOverrides = (
   story: Story,
   overrides: StoryGenerationOverrides,

@@ -1,8 +1,15 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Story, StoryRow } from '../types';
+import { AppConfig, Story, StoryRow } from '../types';
 import { supabase } from '../supabaseClient';
-import { createStoryDraft, normalizeStoryRow, serializeStoryMetadata } from '../services/storyMetadata';
+import {
+  buildStoryGenerationOverridesFromConfig,
+  buildStoryGenerationOverridesSnapshot,
+  createStoryDraft,
+  normalizeStoryRow,
+  serializeStoryMetadata,
+  withStoryGenerationOverrides,
+} from '../services/storyMetadata';
 
 interface StoriesState {
   items: Story[];
@@ -55,7 +62,10 @@ export const fetchStoryById = createAsyncThunk('stories/fetchById', async (id: s
   return data ? normalizeStoryRow(data as StoryRow) : null;
 });
 
-export const createStoryRemote = createAsyncThunk('stories/create', async (userId: string) => {
+export const createStoryRemote = createAsyncThunk('stories/create', async (userId: string, thunkApi) => {
+  const state = thunkApi.getState() as { config: AppConfig };
+  const generationOverrides = buildStoryGenerationOverridesFromConfig(state.config);
+
   const { data, error } = await supabase
     .from('projects')
     .insert({
@@ -66,6 +76,7 @@ export const createStoryRemote = createAsyncThunk('stories/create', async (userI
       status: 'draft',
       metadata: createStoryDraft({
         summary: 'A new story waiting to be told...',
+        generationOverrides,
       }),
     })
     .select(storyDetailSelect);
@@ -89,7 +100,10 @@ const makeIdeaTitle = (idea: string, index: number): string => {
 
 export const createStoriesFromIdeasRemote = createAsyncThunk(
   'stories/createFromIdeas',
-  async ({ userId, ideas }: { userId: string; ideas: string[] }) => {
+  async ({ userId, ideas }: { userId: string; ideas: string[] }, thunkApi) => {
+    const state = thunkApi.getState() as { config: AppConfig };
+    const generationOverrides = buildStoryGenerationOverridesFromConfig(state.config);
+
     const rows = ideas.map((idea, index) => ({
       user_id: userId,
       title: makeIdeaTitle(idea, index),
@@ -98,6 +112,7 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
       status: 'draft',
       metadata: createStoryDraft({
         summary: idea,
+        generationOverrides,
       }),
     }));
 
@@ -111,12 +126,16 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
   }
 );
 
-export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story) => {
+export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story, thunkApi) => {
+  const state = thunkApi.getState() as { config: AppConfig };
+  const generationOverrides = buildStoryGenerationOverridesSnapshot(state.config, story);
+  const metadataWithOverrides = withStoryGenerationOverrides(story, generationOverrides);
   const hasTranscript = typeof story.transcript === 'string';
   const transcript = hasTranscript ? story.transcript : '';
   const word_count = hasTranscript ? countWords(transcript) : (story.word_count ?? 0);
   const metadata = serializeStoryMetadata({
     ...story,
+    metadata: metadataWithOverrides,
     transcript,
     word_count,
   });
