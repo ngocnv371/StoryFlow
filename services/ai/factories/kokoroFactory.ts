@@ -164,6 +164,10 @@ export class KokoroAIGenerationFactory implements AIGenerationFactory {
     throw new Error('Kokoro provider supports narration only. Use Gemini or OpenAI compatible for text.');
   }
 
+  async generateImagePrompts(_config: AppConfig, _story: Story, _numberOfPrompts: number): Promise<string[]> {
+    throw new Error('Kokoro provider supports narration only. Use Gemini for image prompts.');
+  }
+
   async generateImage(_config: AppConfig, _story: Story): Promise<string> {
     throw new Error('Kokoro provider supports narration only. Use Gemini or ComfyUI for images.');
   }

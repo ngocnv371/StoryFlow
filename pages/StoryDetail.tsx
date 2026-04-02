@@ -28,6 +28,7 @@ const StoryDetail: React.FC = () => {
   const [isLoadingStory, setIsLoadingStory] = useState(false);
   const [storyLoadFailed, setStoryLoadFailed] = useState(false);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'workflow' | 'cover'>('workflow');
   const hasDetailTranscript = typeof story?.transcript === "string";
 
   useEffect(() => {
@@ -132,22 +133,57 @@ const StoryDetail: React.FC = () => {
         onChange={(tags) => handleUpdate({ tags })}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="space-y-6">
-          <NarrationSection story={formData} onUpdate={handleUpdate} />
+      <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-2">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('workflow')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'workflow'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+            }`}
+          >
+            Workflow
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('cover')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === 'cover'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+            }`}
+          >
+            Cover Studio
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'workflow' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-6">
+            <NarrationSection story={formData} onUpdate={handleUpdate} />
+            <MusicSection story={formData} onUpdate={handleUpdate} />
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            <TranscriptSection story={formData} onUpdate={handleUpdate} />
+            <VideoSection story={formData} onUpdate={handleUpdate} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'cover' && (
+        <div className="max-w-3xl">
           <CoverSection
             story={formData}
             onUpdate={handleUpdate}
             onOpenInspector={() => setIsInspectorOpen(true)}
           />
-          <MusicSection story={formData} onUpdate={handleUpdate} />
         </div>
+      )}
 
-        <div className="lg:col-span-2 space-y-6">
-          <TranscriptSection story={formData} onUpdate={handleUpdate} />
-          <VideoSection story={formData} onUpdate={handleUpdate} />
-        </div>
-      </div>
       <ImageInspector
         isOpen={isInspectorOpen}
         onClose={() => setIsInspectorOpen(false)}

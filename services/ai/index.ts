@@ -98,3 +98,45 @@ export const generateProjectIdeas = async (
   const factory = createAIGenerationFactory(provider);
   return await factory.generateProjectIdeas(config, theme);
 };
+
+export const generateImagePrompts = async (
+  config: AppConfig,
+  story: Story,
+  numberOfPrompts: number
+): Promise<string[]> => {
+  const provider: AIProviderFactoryType =
+    config.generationProviders.text === 'openai-compatible'
+      ? 'openai-compatible'
+      : config.generationProviders.text === 'comfyui'
+        ? 'comfyui'
+        : 'gemini';
+  const factory = createAIGenerationFactory(provider);
+  return await factory.generateImagePrompts(config, story, numberOfPrompts);
+};
+
+export const generateMultipleImages = async (
+  config: AppConfig,
+  story: Story,
+  imagePrompts: string[]
+): Promise<string[]> => {
+  const imageProvider: AIProviderFactoryType = config.generationProviders.image === 'comfyui' ? 'comfyui' : 'gemini';
+  const factory = createAIGenerationFactory(imageProvider);
+  
+  const imageUrls: string[] = [];
+  for (let i = 0; i < imagePrompts.length; i++) {
+    try {
+      // Create a temporary story object with the current prompt
+      const tempStory = {
+        ...story,
+        cover_prompt: imagePrompts[i]
+      };
+      const imageUrl = await factory.generateImage(config, tempStory);
+      imageUrls.push(imageUrl);
+    } catch (error) {
+      console.error(`Failed to generate image ${i + 1}/${imagePrompts.length}:`, error);
+      // Continue with next image instead of failing completely
+    }
+  }
+  
+  return imageUrls;
+};

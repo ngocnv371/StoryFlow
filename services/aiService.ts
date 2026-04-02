@@ -8,6 +8,8 @@ export {
   generateStoryTranscript,
   extendStoryTranscript,
   uploadVideoToSupabase,
+  generateImagePrompts,
+  generateMultipleImages,
 } from './ai';
 
 export type {

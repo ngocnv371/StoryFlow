@@ -1,7 +1,7 @@
 import { GoogleGenAI, Modality } from '@google/genai';
 import { AppConfig, Story } from '../../../types';
 import { createWavHeader } from '../../audio';
-import { buildExtendTranscriptPrompt, buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt } from '../prompts';
+import { buildExtendTranscriptPrompt, buildProjectIdeasPrompt, buildTranscriptPrompt, constructImagePrompt, buildImagePromptsRequest } from '../prompts';
 import { SUPABASE_AUDIO_BUCKET, SUPABASE_IMAGE_BUCKET, uploadBase64ToSupabase, uploadToSupabase } from '../storage';
 import { AIGenerationFactory, GeneratedAudio, GeneratedStoryText } from '../types';
 import {
@@ -164,6 +164,48 @@ export class GeminiAIGenerationFactory implements AIGenerationFactory {
     } catch (error: any) {
       console.error('Cover image generation error details:', error);
       throw new Error(error.message || 'Image generation failed.');
+    }
+  }
+
+  async generateImagePrompts(config: AppConfig, story: Story, numberOfPrompts: number): Promise<string[]> {
+    const finalApiKey = config.gemini.apiKey || process.env.API_KEY || '';
+    const ai = new GoogleGenAI({ apiKey: finalApiKey });
+
+    try {
+      const response = await ai.models.generateContent({
+        model: config.gemini.textModel || 'gemini-3-flash-preview',
+        contents: buildImagePromptsRequest(story, numberOfPrompts),
+        config: {
+          maxOutputTokens: TEXT_GEN_MAX_OUTPUT_TOKENS,
+        },
+      });
+
+      if (!response.text) {
+        console.warn('Gemini returned an empty response for image prompts:', response);
+        throw new Error('Empty response from AI model');
+      }
+
+      const text = response.text.trim();
+      const cleanedText = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+      const parsed = JSON.parse(cleanedText);
+      if (!Array.isArray(parsed?.prompts)) {
+        throw new Error('AI response does not include a prompts array.');
+      }
+
+      const prompts = parsed.prompts
+        .map((prompt: unknown) => (typeof prompt === 'string' ? prompt.trim() : ''))
+        .filter((prompt: string) => prompt.length > 0)
+        .slice(0, numberOfPrompts);
+
+      if (prompts.length < numberOfPrompts) {
+        console.warn(`Expected ${numberOfPrompts} prompts, but only got ${prompts.length}`);
+      }
+
+      return prompts;
+    } catch (error: any) {
+      console.error('Image prompts generation error details:', error);
+      throw new Error(error.message || 'Image prompts generation failed.');
     }
   }
 

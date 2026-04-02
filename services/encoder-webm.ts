@@ -23,12 +23,15 @@ interface VideoConfig {
 interface CompileRenderOptions {
   enableKenBurns?: boolean;
   enableParticles?: boolean;
+  fps?: number;
+  frameDuration?: number;
+  imageUrls?: string[];
 }
 
 interface CompileArgsResolved {
   backgroundMusicUrl?: string;
   onProgress?: (progress: number) => void;
-  renderOptions: Required<CompileRenderOptions>;
+  renderOptions: Required<Omit<CompileRenderOptions, 'imageUrls'>> & { imageUrls?: string[] };
 }
 
 interface CoverPlacement {
@@ -58,9 +61,11 @@ const DEFAULT_CONFIG: VideoConfig = {
   audioChannels: 2,
 };
 
-const DEFAULT_RENDER_OPTIONS: Required<CompileRenderOptions> = {
+const DEFAULT_RENDER_OPTIONS: Required<Omit<CompileRenderOptions, 'imageUrls'>> = {
   enableKenBurns: true,
   enableParticles: true,
+  fps: 24,
+  frameDuration: 3000,
 };
 
 /**
@@ -105,6 +110,7 @@ async function loadAndDecodeAudio(audioUrl: string): Promise<AudioBuffer> {
 /**
  * Using Mediabunny to compile a video from a cover image and audio track.
  * The output video length will match the audio duration, and the cover image will be displayed throughout the video.
+ * If imageUrls is provided in options, the video will cycle through multiple images.
  */
 export async function compileStoryVideo(
   coverImageUrl: string, 
@@ -118,6 +124,9 @@ export async function compileStoryVideo(
     onProgressOrOptionsMaybe,
     optionsMaybe
   );
+
+  const effectiveFps = renderOptions.fps || DEFAULT_CONFIG.fps;
+  const effectiveFrameDuration = renderOptions.frameDuration || DEFAULT_RENDER_OPTIONS.frameDuration;
   
   console.log('🚀 Starting video compilation...');
   console.log(`📄 Cover image URL: ${coverImageUrl}`);
@@ -127,9 +136,12 @@ export async function compileStoryVideo(
   }
 
   try {
-    // Load the cover image and audio in parallel
-    const [coverImage, audioBuffer, backgroundMusicBuffer] = await Promise.all([
-      loadImage(coverImageUrl),
+    const additionalImageUrls = renderOptions.imageUrls ?? [];
+    const allImageUrls = additionalImageUrls.length > 0 ? additionalImageUrls : [coverImageUrl];
+    
+    // Load all images and audio in parallel
+    const [images, audioBuffer, backgroundMusicBuffer] = await Promise.all([
+      Promise.all(allImageUrls.map(url => loadImage(url))),
       loadAndDecodeAudio(audioUrl),
       backgroundMusicUrl ? loadAndDecodeAudio(backgroundMusicUrl) : Promise.resolve(null),
     ]);
@@ -139,21 +151,22 @@ export async function compileStoryVideo(
       ? await mixNarrationWithBackgroundMusic(audioBuffer, backgroundMusicBuffer, DEFAULT_CONFIG.audioSampleRate)
       : audioBuffer;
 
-    const totalFrames = Math.ceil(duration * DEFAULT_CONFIG.fps);
+    const totalFrames = Math.ceil(duration * effectiveFps);
+    const framesPerImage = Math.max(1, Math.round((effectiveFrameDuration / 1000) * effectiveFps));
     
-    console.log(`🎬 Video will be ${duration.toFixed(2)}s long (${totalFrames} frames at ${DEFAULT_CONFIG.fps}fps)`);
+    console.log(`🎬 Video will be ${duration.toFixed(2)}s long (${totalFrames} frames at ${effectiveFps}fps)`);
+    console.log(`🖼️ Cycling through ${images.length} image(s), ${framesPerImage} frames each`);
 
     // Create canvas for rendering
     const canvas = new OffscreenCanvas(DEFAULT_CONFIG.width, DEFAULT_CONFIG.height);
     const ctx = canvas.getContext('2d', { alpha: false })!;
 
-    const coverPlacement = calculateCoverPlacement(
-      coverImage,
-      DEFAULT_CONFIG.width,
-      DEFAULT_CONFIG.height
-    );
+    // Pre-compute placement for each image
+    const placements = images.map(img => calculateCoverPlacement(img, DEFAULT_CONFIG.width, DEFAULT_CONFIG.height));
 
-    const kenBurnsPath = createKenBurnsPath();
+    // Ken Burns paths per image so each has its own animation
+    const kenBurnsPaths = images.map(() => createKenBurnsPath());
+
     const particles = renderOptions.enableParticles
       ? createParticles(DEFAULT_CONFIG.width, DEFAULT_CONFIG.height)
       : [];
@@ -178,7 +191,7 @@ export async function compileStoryVideo(
       codec: videoCodec,
       bitrate: DEFAULT_CONFIG.bitrate,
     });
-    output.addVideoTrack(canvasSource, { frameRate: DEFAULT_CONFIG.fps });
+    output.addVideoTrack(canvasSource, { frameRate: effectiveFps });
 
     // Get audio codec and create audio source
     const audioCodec = await getFirstEncodableAudioCodec(output.format.getSupportedAudioCodecs(), {
@@ -204,23 +217,28 @@ export async function compileStoryVideo(
     
     // Render all frames
     for (let currentFrame = 0; currentFrame < totalFrames; currentFrame++) {
-      const currentTime = currentFrame / DEFAULT_CONFIG.fps;
+      const currentTime = currentFrame / effectiveFps;
+
+      // Determine which image to show based on frameDuration
+      const imageIndex = Math.floor(currentFrame / framesPerImage) % images.length;
+      // Frame progress within the current image segment
+      const frameWithinSegment = currentFrame % framesPerImage;
 
       renderFrame(ctx, {
-        image: coverImage,
-        placement: coverPlacement,
+        image: images[imageIndex],
+        placement: placements[imageIndex],
         canvasWidth: DEFAULT_CONFIG.width,
         canvasHeight: DEFAULT_CONFIG.height,
-        currentFrame,
-        totalFrames,
+        currentFrame: frameWithinSegment,
+        totalFrames: framesPerImage,
         currentTime,
         particles,
         enableKenBurns: renderOptions.enableKenBurns,
         enableParticles: renderOptions.enableParticles,
-        kenBurnsPath,
+        kenBurnsPath: kenBurnsPaths[imageIndex],
       });
       
-      await canvasSource.add(currentTime, 1 / DEFAULT_CONFIG.fps);
+      await canvasSource.add(currentTime, 1 / effectiveFps);
       
       // Report progress
       if (onProgress) {
@@ -317,7 +335,10 @@ function isCompileRenderOptions(value: unknown): value is CompileRenderOptions {
   const maybeOptions = value as CompileRenderOptions;
   return (
     typeof maybeOptions.enableKenBurns === 'boolean' ||
-    typeof maybeOptions.enableParticles === 'boolean'
+    typeof maybeOptions.enableParticles === 'boolean' ||
+    typeof maybeOptions.fps === 'number' ||
+    typeof maybeOptions.frameDuration === 'number' ||
+    Array.isArray(maybeOptions.imageUrls)
   );
 }
 

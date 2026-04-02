@@ -95,6 +95,11 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       return;
     }
 
+    if (requiredImages > 0 && imageUrls.length < requiredImages) {
+      toast.error(`Please generate at least ${requiredImages} scene images before compiling the video.`);
+      return;
+    }
+
     dispatch(setVideoGenStatus({ id: story.id, status: 'generating' }));
     setProgress(0);
     
@@ -107,6 +112,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
         {
           enableKenBurns: effectiveConfig.video.enableKenBurns,
           enableParticles: effectiveConfig.video.enableParticles,
+          fps: effectiveConfig.video.fps ?? 30,
+          frameDuration: effectiveConfig.video.frameDuration ?? 3000,
+          imageUrls: imageUrls.length >= requiredImages && requiredImages > 0 ? imageUrls : undefined,
         }
       );
       
@@ -151,7 +159,12 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   };
 
   const isGenerating = status === 'generating';
-  const hasRequiredAssets = story.thumbnail_url && story.audio_url;
+  const narrationDuration = story.duration ?? 0;
+  const frameDuration = effectiveConfig.video.frameDuration ?? 3000;
+  const requiredImages = narrationDuration > 0 ? Math.ceil(narrationDuration / (frameDuration / 1000)) : 0;
+  const imageUrls: string[] = Array.isArray(story.metadata?.image_urls) ? (story.metadata!.image_urls as string[]) : [];
+  const hasEnoughImages = requiredImages === 0 || imageUrls.length >= requiredImages;
+  const hasRequiredAssets = story.thumbnail_url && story.audio_url && hasEnoughImages;
   const hasCompiledVideo = videoBlob && videoPreviewUrl;
 
   return (
@@ -203,11 +216,18 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
               <span>Audio: {story.audio_url ? 'Ready' : 'Required'}</span>
             </div>
             <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${hasEnoughImages ? 'bg-green-400' : 'bg-amber-400'}`}></span>
+              <span>
+                Scene Images: {imageUrls.length}/{requiredImages > 0 ? requiredImages : '?'}
+                {!hasEnoughImages && requiredImages > 0 && ` — need ${requiredImages - imageUrls.length} more`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${story.video_url ? 'bg-green-400' : 'bg-gray-300'}`}></span>
               <span>Video: {story.video_url ? 'Saved to Cloud' : 'Not uploaded'}</span>
             </div>
             <p className="mt-2 italic leading-relaxed text-slate-600">
-              Creates a video using hybrid MediaRecorder approach with precise frame control at 24 FPS, matching audio duration with your cover art as the background.
+              Creates a video cycling through scene images at {effectiveConfig.video.frameDuration ?? 3000}ms per frame at {effectiveConfig.video.fps ?? 30} FPS, matching audio duration.
             </p>
           </div>
           <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45"></div>

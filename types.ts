@@ -55,6 +55,9 @@ export interface StoryMetadata {
   duration?: number;
   music_url?: string;
   video_url?: string;
+  image_prompts?: string[];
+  image_urls?: string[];
+  selected_cover_image_index?: number;
   generationOverrides?: StoryGenerationOverrides;
   [key: string]: unknown;
 }
@@ -120,6 +123,8 @@ export interface YouTubeConfig {
 export interface VideoGenConfig {
   enableKenBurns: boolean;
   enableParticles: boolean;
+  fps: number;
+  frameDuration: number; // in milliseconds
 }
 
 export interface User {

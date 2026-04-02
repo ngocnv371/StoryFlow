@@ -13,6 +13,7 @@ export interface AIGenerationFactory {
   extendTranscript(config: AppConfig, tags: string[], transcript: string): Promise<string>;
   generateProjectIdeas(config: AppConfig, theme: string): Promise<string[]>;
   generateImage(config: AppConfig, story: Story): Promise<string>;
+  generateImagePrompts(config: AppConfig, story: Story, numberOfPrompts: number): Promise<string[]>;
   generateAudio(config: AppConfig, story: Story): Promise<GeneratedAudio>;
   generateMusic(config: AppConfig, story: Story): Promise<string>;
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import VideoGenerator from '../VideoGenerator';
+import VideoImagesGenerator from '../VideoImagesGenerator';
 import { Story, StoryGenerationOverrides } from '../../types';
 import { RootState } from '../../store';
 import { getStoryGenerationOverrides, resolveStoryConfig, withStoryGenerationOverrides } from '../../services/storyMetadata';
@@ -78,6 +79,9 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
       </div>
 
       <VideoGenerator story={story} />
+      <div className="p-4 bg-slate-900 rounded-xl space-y-4 border">
+        <VideoImagesGenerator story={story} />
+      </div>
       {story.video_url && (
         <div className="p-4 bg-slate-900 rounded-xl space-y-2 border">
           <p className="text-xs font-bold text-slate-500 uppercase">Saved Video</p>

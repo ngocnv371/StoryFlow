@@ -40,6 +40,32 @@ Summary: ${story.summary}.
 Atmosphere: ${story.tags.join(', ')}. 
 Style: High-quality digital concept art, epic lighting, professional composition.`;
 
+export const buildImagePromptsRequest = (story: Story, numberOfPrompts: number): string => {
+  const basePrompt = story.cover_prompt || `Artistic, cinematic cover art for a story titled "${story.title}" with summary: ${story.summary}`;
+  
+  return `Generate ${numberOfPrompts} unique cinematic image prompts for a video about: "${story.title}".
+
+Summary: ${story.summary}
+Tags: ${story.tags.join(', ')}
+Base Visual Style: ${basePrompt}
+
+IMPORTANT INSTRUCTIONS:
+1. Return JSON only in this exact shape:
+{
+  "prompts": [
+    "prompt 1",
+    "prompt 2",
+    ...
+  ]
+}
+2. Generate exactly ${numberOfPrompts} unique, vivid image prompts.
+3. Each prompt should be 1-2 sentences describing a cinematic scene or visual moment that fits the story.
+4. Vary the scenes and perspectives - show different moments, characters, landscapes, or emotions from the story.
+5. Each prompt should be suitable for AI image generation (Gemini Imagen).
+6. Maintain consistent style and tone across all prompts (cinematic, high-quality, professional).
+7. Do not include markdown or code fences.`;
+};
+
 export const buildProjectIdeasPrompt = (theme: string): string => `Generate exactly 10 concise short story ideas for a podcast.
 
 Theme: ${theme}

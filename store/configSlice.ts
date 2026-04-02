@@ -57,6 +57,8 @@ const defaultState: AppConfig = {
   video: {
     enableKenBurns: true,
     enableParticles: true,
+    fps: 30,
+    frameDuration: 3000,
   },
   youtube: {
     clientId: '',
