@@ -164,8 +164,23 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const requiredImages = narrationDuration > 0 ? Math.ceil(narrationDuration / (frameDuration / 1000)) : 0;
   const imageUrls: string[] = Array.isArray(story.metadata?.image_urls) ? (story.metadata!.image_urls as string[]) : [];
   const hasEnoughImages = requiredImages === 0 || imageUrls.length >= requiredImages;
-  const hasRequiredAssets = story.thumbnail_url && story.audio_url && hasEnoughImages;
+  const hasRequiredAssets = Boolean(story.thumbnail_url) && Boolean(story.audio_url) && hasEnoughImages;
   const hasCompiledVideo = videoBlob && videoPreviewUrl;
+  const missingRequirements: string[] = [];
+
+  if (!story.thumbnail_url) {
+    missingRequirements.push('Missing cover image');
+  }
+
+  if (!story.audio_url) {
+    missingRequirements.push('Missing narration audio');
+  }
+
+  if (!hasEnoughImages && requiredImages > 0) {
+    missingRequirements.push(`Missing scene images (${imageUrls.length}/${requiredImages})`);
+  }
+
+  const blockedReason = missingRequirements.join(' | ');
 
   return (
     <div className="relative space-y-4">
@@ -197,6 +212,12 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
           </>
         )}
       </button>
+
+      {!hasRequiredAssets && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <span className="font-semibold">Cannot compile video yet:</span> {blockedReason}
+        </div>
+      )}
 
       {showTooltip && (
         <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-3 w-80 p-4 bg-slate-900 text-white text-[11px] rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none">
