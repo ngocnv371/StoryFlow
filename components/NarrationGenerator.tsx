@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
-import { setAudioGenStatus, updateStoryRemote } from '../store/storiesSlice';
+import { setAudioGenStatus, patchStoryRemote } from '../store/storiesSlice';
 import { generateAudioSpeech } from '../services/aiService';
 import { Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
@@ -27,7 +27,7 @@ const NarrationGenerator: React.FC<NarrationGeneratorProps> = ({ story }) => {
     dispatch(setAudioGenStatus({ id: story.id, status: 'generating' }));
     try {
       const narration = await generateAudioSpeech(effectiveConfig, story);
-      await dispatch(updateStoryRemote({ ...story, audio_url: narration.url, duration: narration.duration }));
+      await dispatch(patchStoryRemote({ id: story.id, audio_url: narration.url, duration: narration.duration }));
       dispatch(setAudioGenStatus({ id: story.id, status: 'idle' }));
       toast.success('Your story narration has been generated and saved.');
     } catch (error: any) {

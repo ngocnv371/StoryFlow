@@ -126,9 +126,8 @@ export const createStoriesFromIdeasRemote = createAsyncThunk(
   }
 );
 
-export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story, thunkApi) => {
-  const state = thunkApi.getState() as { config: AppConfig };
-  const generationOverrides = buildStoryGenerationOverridesSnapshot(state.config, story);
+const performStoryUpdate = async (story: Story, config: AppConfig): Promise<Story> => {
+  const generationOverrides = buildStoryGenerationOverridesSnapshot(config, story);
   const metadataWithOverrides = withStoryGenerationOverrides(story, generationOverrides);
   const hasTranscript = typeof story.transcript === 'string';
   const transcript = hasTranscript ? story.transcript : '';
@@ -154,6 +153,18 @@ export const updateStoryRemote = createAsyncThunk('stories/update', async (story
     .select(storyDetailSelect);
   if (error) throw error;
   return normalizeStoryRow(data[0] as StoryRow);
+};
+
+export const updateStoryRemote = createAsyncThunk('stories/update', async (story: Story, thunkApi) => {
+  const state = thunkApi.getState() as { config: AppConfig };
+  return performStoryUpdate(story, state.config);
+});
+
+export const patchStoryRemote = createAsyncThunk('stories/patch', async (patch: Partial<Story> & { id: string }, thunkApi) => {
+  const state = thunkApi.getState() as { stories: StoriesState; config: AppConfig };
+  const currentStory = state.stories.items.find(s => s.id === patch.id);
+  if (!currentStory) throw new Error('Story not found');
+  return performStoryUpdate({ ...currentStory, ...patch }, state.config);
 });
 
 const initialState: StoriesState = {
@@ -217,6 +228,12 @@ const storiesSlice = createSlice({
         state.items = [...createdStories, ...state.items];
       })
       .addCase(updateStoryRemote.fulfilled, (state, action) => {
+        const index = state.items.findIndex(s => s.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(patchStoryRemote.fulfilled, (state, action) => {
         const index = state.items.findIndex(s => s.id === action.payload.id);
         if (index !== -1) {
           state.items[index] = action.payload;

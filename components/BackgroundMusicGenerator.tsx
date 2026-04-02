@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
-import { setMusicGenStatus, updateStoryRemote } from '../store/storiesSlice';
+import { setMusicGenStatus, patchStoryRemote } from '../store/storiesSlice';
 import { generateBackgroundMusic } from '../services/aiService';
 import { Story } from '../types';
 import toast from 'react-hot-toast';
@@ -29,7 +29,7 @@ const BackgroundMusicGenerator: React.FC<BackgroundMusicGeneratorProps> = ({ sto
     dispatch(setMusicGenStatus({ id: story.id, status: 'generating' }));
     try {
       const musicUrl = await generateBackgroundMusic(config, story);
-      await dispatch(updateStoryRemote({ ...story, music_url: musicUrl }));
+      await dispatch(patchStoryRemote({ id: story.id, music_url: musicUrl }));
       dispatch(setMusicGenStatus({ id: story.id, status: 'idle' }));
       toast.success('Background music has been generated and saved.');
     } catch (error: any) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
-import { setVideoGenStatus, updateStoryRemote } from '../store/storiesSlice';
+import { setVideoGenStatus, patchStoryRemote } from '../store/storiesSlice';
 import { setYouTubeConfig } from '../store/configSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
 import { uploadVideoToSupabase } from '../services/aiService';
@@ -43,7 +43,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
     setIsSaving(true);
     try {
       const videoUrl = await uploadVideoToSupabase(story.id, videoBlob);
-      await dispatch(updateStoryRemote({ ...story, video_url: videoUrl }));
+      await dispatch(patchStoryRemote({ id: story.id, video_url: videoUrl }));
 
       toast.success('Video saved to Supabase storage.');
     } catch (error: any) {

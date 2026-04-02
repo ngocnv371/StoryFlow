@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
-import { setImageGenStatus, updateStoryRemote } from '../store/storiesSlice';
+import { setImageGenStatus, patchStoryRemote } from '../store/storiesSlice';
 import { generateCoverImage, constructImagePrompt } from '../services/aiService';
 import { Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
@@ -25,7 +25,7 @@ const CoverGenerator: React.FC<CoverGeneratorProps> = ({ story }) => {
     dispatch(setImageGenStatus({ id: story.id, status: 'generating' }));
     try {
       const imageUrl = await generateCoverImage(effectiveConfig, story);
-      await dispatch(updateStoryRemote({ ...story, thumbnail_url: imageUrl }));
+      await dispatch(patchStoryRemote({ id: story.id, thumbnail_url: imageUrl }));
       dispatch(setImageGenStatus({ id: story.id, status: 'idle' }));
     } catch (error: any) {
       console.error(error);
