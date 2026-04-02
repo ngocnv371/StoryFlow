@@ -14,6 +14,7 @@ import comfyMusicWorkflow from './comfy-music.json';
 
 const COMFY_POLL_INTERVAL_MS = 1500;
 const COMFY_MAX_POLL_ATTEMPTS = 80;
+const COMFY_CLIENT_ID = 'story-flow';
 
 function asNonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
@@ -349,6 +350,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
             method: 'POST',
             headers,
             body: JSON.stringify({
+              client_id: COMFY_CLIENT_ID,
               prompt: createZImageWorkflow(story, config),
               storyId: story.id,
               width,
@@ -412,6 +414,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
             method: 'POST',
             headers,
             body: JSON.stringify({
+              client_id: COMFY_CLIENT_ID,
               prompt: createMusicWorkflow(story),
               storyId: story.id,
               model: config.comfy.model,
