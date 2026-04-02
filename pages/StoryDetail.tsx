@@ -4,12 +4,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../store";
 import { fetchStoryById, updateStoryRemote } from "../store/storiesSlice";
 import { Story } from "../types";
-import ImageInspector from "../components/ImageInspector";
 import AutoGenerateButton from "../components/AutoGenerateButton";
 import StorySummarySection from "../components/story-detail/StorySummarySection";
 import VideoSection from "../components/story-detail/VideoSection";
+import VideoImagesGenerator from "../components/VideoImagesGenerator";
 import NarrationSection from "../components/story-detail/NarrationSection";
-import CoverSection from "../components/story-detail/CoverSection";
 import MusicSection from "../components/story-detail/MusicSection";
 import TagsSection from "../components/story-detail/TagsSection";
 import TranscriptSection from "../components/story-detail/TranscriptSection";
@@ -27,8 +26,7 @@ const StoryDetail: React.FC = () => {
   const [formData, setFormData] = useState<Story | null>(null);
   const [isLoadingStory, setIsLoadingStory] = useState(false);
   const [storyLoadFailed, setStoryLoadFailed] = useState(false);
-  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'workflow' | 'cover'>('workflow');
+  const [activeTab, setActiveTab] = useState<'workflow' | 'output'>('workflow');
   const hasDetailTranscript = typeof story?.transcript === "string";
 
   useEffect(() => {
@@ -148,14 +146,14 @@ const StoryDetail: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('cover')}
+            onClick={() => setActiveTab('output')}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'cover'
+              activeTab === 'output'
                 ? 'bg-indigo-600 text-white shadow-lg'
                 : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
             }`}
           >
-            Cover Studio
+            Output
           </button>
         </div>
       </div>
@@ -169,27 +167,18 @@ const StoryDetail: React.FC = () => {
 
           <div className="lg:col-span-2 space-y-6">
             <TranscriptSection story={formData} onUpdate={handleUpdate} />
-            <VideoSection story={formData} onUpdate={handleUpdate} />
           </div>
         </div>
       )}
 
-      {activeTab === 'cover' && (
-        <div className="max-w-3xl">
-          <CoverSection
-            story={formData}
-            onUpdate={handleUpdate}
-            onOpenInspector={() => setIsInspectorOpen(true)}
-          />
+      {activeTab === 'output' && (
+        <div className="space-y-6">
+          <VideoSection story={formData} onUpdate={handleUpdate} />
+          <div className="p-4 bg-slate-900 rounded-xl space-y-4 border">
+            <VideoImagesGenerator story={formData} />
+          </div>
         </div>
       )}
-
-      <ImageInspector
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        imageUrl={formData.thumbnail_url}
-        title={formData.title}
-      />
     </div>
   );
 };

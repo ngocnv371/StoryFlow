@@ -7,6 +7,7 @@ import { SUPABASE_IMAGE_BUCKET, uploadToSupabase } from '../services/ai/storage'
 import { Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
 import toast from 'react-hot-toast';
+import ImageInspector from './ImageInspector';
 
 interface VideoImagesGeneratorProps {
   story: Story;
@@ -26,6 +27,8 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
   const [uploadCompleted, setUploadCompleted] = useState(0);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [replaceOnUpload, setReplaceOnUpload] = useState(true);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const frameDuration = effectiveConfig.video.frameDuration ?? 3000;
@@ -45,6 +48,8 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
   const hasEnoughImages = existingImageUrls.length >= requiredImages && requiredImages > 0;
   const isGenerating = phase !== 'idle';
   const isBusy = isGenerating || isUploading;
+  const timelineAspectRatio = effectiveConfig.imageGen.aspectRatio ?? '16:9';
+  const timelineAspectRatioCss = timelineAspectRatio.replace(':', ' / ');
 
   const handleGenerate = async () => {
     if (!narrationDuration) {
@@ -145,6 +150,11 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
     } catch (error: any) {
       toast.error(error.message || 'Failed to set cover image.');
     }
+  };
+
+  const handlePreviewImage = (imageUrl: string, index: number) => {
+    setPreviewImageUrl(imageUrl);
+    setPreviewTitle(`Scene ${index + 1}`);
   };
 
   const handleRemoveImages = async () => {
@@ -397,17 +407,20 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                   <div className={`rounded-xl border p-3 bg-slate-900/80 ${
                     isCover ? 'border-indigo-500/70' : 'border-slate-700'
                   }`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-[minmax(80px,140px)_1fr] gap-3 items-start">
                       <button
                         type="button"
-                        onClick={() => handleSetAsCover(url, idx)}
+                        onClick={() => handlePreviewImage(url, idx)}
                         className="relative rounded-lg overflow-hidden border border-slate-700 group text-left"
+                        title="Preview image"
                       >
-                        <img
-                          src={url}
-                          alt={`Scene ${idx + 1}`}
-                          className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <div className="w-full" style={{ aspectRatio: timelineAspectRatioCss }}>
+                          <img
+                            src={url}
+                            alt={`Scene ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors" />
                         <span className="absolute left-2 top-2 text-[10px] bg-black/70 text-slate-200 px-2 py-1 rounded-full">
                           Scene {idx + 1}
@@ -424,16 +437,26 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                           <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">
                             Prompt {idx + 1}
                           </p>
-                          {!isCover && (
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => handleSetAsCover(url, idx)}
-                              className="text-xs text-indigo-300 hover:text-indigo-200 font-semibold"
+                              onClick={() => handlePreviewImage(url, idx)}
+                              className="text-xs text-slate-300 hover:text-slate-100 font-semibold"
                             >
-                              Set as Cover
+                              Preview
                             </button>
-                          )}
+                            {!isCover && (
+                              <button
+                                type="button"
+                                onClick={() => handleSetAsCover(url, idx)}
+                                className="text-xs text-indigo-300 hover:text-indigo-200 font-semibold"
+                              >
+                                Set as Cover
+                              </button>
+                            )}
+                          </div>
                         </div>
+                        <p className="text-[11px] text-slate-500">Aspect ratio: {timelineAspectRatio}</p>
                         <p className="text-sm text-slate-200 leading-relaxed">
                           {prompt}
                         </p>
@@ -452,6 +475,13 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
           )}
         </div>
       )}
+
+      <ImageInspector
+        isOpen={!!previewImageUrl}
+        onClose={() => setPreviewImageUrl(null)}
+        imageUrl={previewImageUrl || ''}
+        title={previewTitle || 'Scene Preview'}
+      />
     </div>
   );
 };

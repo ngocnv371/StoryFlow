@@ -1,10 +1,10 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import VideoGenerator from '../VideoGenerator';
-import VideoImagesGenerator from '../VideoImagesGenerator';
 import { Story, StoryGenerationOverrides } from '../../types';
 import { RootState } from '../../store';
 import { getStoryGenerationOverrides, resolveStoryConfig, withStoryGenerationOverrides } from '../../services/storyMetadata';
+import { DEFAULT_GEMINI_STANDARD_ASPECT_RATIO, GEMINI_STANDARD_ASPECT_RATIOS } from '../../constants';
 
 interface VideoSectionProps {
   story: Story;
@@ -30,9 +30,20 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
     });
   };
 
+  const handleAspectRatioChange = (aspectRatio: string) => {
+    handleOverridesChange({
+      ...generationOverrides,
+      cover: {
+        ...generationOverrides.cover,
+        aspectRatio: aspectRatio as (typeof GEMINI_STANDARD_ASPECT_RATIOS)[number],
+      },
+    });
+  };
+
   const handleResetOverrides = () => {
     handleOverridesChange({
       ...generationOverrides,
+      cover: {},
       video: {},
     });
   };
@@ -51,8 +62,22 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
             onClick={handleResetOverrides}
             className="text-xs text-indigo-600 font-semibold hover:text-indigo-300"
           >
-            Reset Video Effects
+            Reset Video Config
           </button>
+        </div>
+        <div className="space-y-2 w-24">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Image Aspect Ratio</p>
+          <select
+            value={storyConfig.imageGen.aspectRatio ?? DEFAULT_GEMINI_STANDARD_ASPECT_RATIO}
+            onChange={(event) => handleAspectRatioChange(event.target.value)}
+            className="w-full p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          >
+            {GEMINI_STANDARD_ASPECT_RATIOS.map((ratio) => (
+              <option key={ratio} value={ratio}>
+                {ratio}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="space-y-2">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Video Effects</p>
@@ -79,9 +104,6 @@ const VideoSection: React.FC<VideoSectionProps> = ({ story, onUpdate }) => {
       </div>
 
       <VideoGenerator story={story} />
-      <div className="p-4 bg-slate-900 rounded-xl space-y-4 border">
-        <VideoImagesGenerator story={story} />
-      </div>
       {story.video_url && (
         <div className="p-4 bg-slate-900 rounded-xl space-y-2 border">
           <p className="text-xs font-bold text-slate-500 uppercase">Saved Video</p>
