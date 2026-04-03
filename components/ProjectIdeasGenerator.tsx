@@ -47,7 +47,7 @@ const ProjectIdeasGenerator: React.FC = () => {
     try {
       const generatedIdeas = await generateProjectIdeas(config, theme.trim());
       setIdeas(generatedIdeas);
-      setApproved(generatedIdeas.map(() => true));
+      setApproved(generatedIdeas.map(() => false));
       setStep('review');
     } catch (error: any) {
       setStep('theme');
