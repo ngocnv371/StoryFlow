@@ -20,7 +20,7 @@ IMPORTANT INSTRUCTIONS:
 2. Generate tags in YouTube style: concise, searchable keywords that capture genres, themes, moods, and related topics.
 
 3. ${isShortForm
-  ? 'The transcript should be short-form, concise, and narration-only in multiple paragraphs. Keep it focused and compact (no stage directions, no formatting, no metadata).'
+  ? 'The transcript should fit for YouTube short and narration-only in multiple paragraphs. Keep it focused and compact (no stage directions, no formatting, no metadata).'
   : 'The transcript should be at least 3000 words in multiple paragraphs of pure narration text only - no stage directions, no formatting, no metadata.'}
 
 Example format:
