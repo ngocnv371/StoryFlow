@@ -8,6 +8,7 @@ import { ImagePromptSection, Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
 import toast from 'react-hot-toast';
 import ImageInspector from './ImageInspector';
+import VideoImageTimelineScene from './VideoImageTimelineScene';
 
 interface VideoImagesGeneratorProps {
   story: Story;
@@ -57,8 +58,6 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
 
   const isGenerating = phase !== 'idle';
   const isBusy = isGenerating || isUploading;
-  const timelineAspectRatio = effectiveConfig.imageGen.aspectRatio ?? '16:9';
-  const timelineAspectRatioCss = timelineAspectRatio.replace(':', ' / ');
 
   const handleGenerate = async () => {
     if (!script) {
@@ -417,92 +416,23 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
           <div className="space-y-4">
             {Array.from({ length: timelineCount }, (_, idx) => {
               const url = existingImageUrls[idx];
-              const hasImage = typeof url === 'string' && url.length > 0;
-              const isCover = hasImage && (story.thumbnail_url === url || idx === selectedIndex);
+              const isCover = typeof url === 'string' && url.length > 0 && (story.thumbnail_url === url || idx === selectedIndex);
               const section = existingSections[idx];
               const prompt = section?.prompt || existingPrompts[idx] || 'No prompt stored for this scene.';
               const sectionText = section?.text || '';
 
               return (
-                <div key={idx} className="relative pl-8">
-                  <div className="absolute left-3 top-0 bottom-0 w-px bg-slate-700"></div>
-                  <div className={`absolute left-0 top-3 h-6 w-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${
-                    isCover
-                      ? 'border-indigo-400 bg-indigo-900 text-indigo-200'
-                      : 'border-slate-500 bg-slate-800 text-slate-300'
-                  }`}>
-                    {idx + 1}
-                  </div>
-
-                  <div className={`rounded-xl border p-3 bg-slate-900/80 ${
-                    isCover ? 'border-indigo-500/70' : 'border-slate-700'
-                  }`}>
-                    <div className="grid grid-cols-1 md:grid-cols-[minmax(80px,140px)_1fr] gap-3 items-start">
-                      <div className="relative rounded-lg overflow-hidden border border-slate-700 group text-left">
-                        <div className="w-full bg-slate-950" style={{ aspectRatio: timelineAspectRatioCss }}>
-                          {hasImage ? (
-                            <img
-                              src={url}
-                              alt={`Scene ${idx + 1}`}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs px-3 text-center">
-                              Image pending for this section
-                            </div>
-                          )}
-                        </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors" />
-                        <span className="absolute left-2 top-2 text-[10px] bg-black/70 text-slate-200 px-2 py-1 rounded-full">
-                          Scene {idx + 1}
-                        </span>
-                        {isCover && (
-                          <span className="absolute right-2 top-2 text-[10px] bg-indigo-600 text-white px-2 py-1 rounded-full font-semibold">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">
-                            Prompt {idx + 1}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            {hasImage && (
-                              <button
-                                type="button"
-                                onClick={() => handlePreviewImage(url, idx)}
-                                className="text-xs text-slate-300 hover:text-slate-100 font-semibold"
-                              >
-                                Preview
-                              </button>
-                            )}
-                            {hasImage && !isCover && (
-                              <button
-                                type="button"
-                                onClick={() => handleSetAsCover(url, idx)}
-                                className="text-xs text-indigo-300 hover:text-indigo-200 font-semibold"
-                              >
-                                Set as Cover
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-slate-500">Aspect ratio: {timelineAspectRatio}</p>
-                        {sectionText && (
-                          <div className="rounded-lg border border-slate-700/70 bg-slate-950/60 px-3 py-2">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Script Section</p>
-                            <p className="mt-1 text-xs text-slate-300 leading-relaxed">{sectionText}</p>
-                          </div>
-                        )}
-                        <p className="text-sm text-slate-200 leading-relaxed">
-                          {prompt}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <VideoImageTimelineScene
+                  key={idx}
+                  index={idx}
+                  imageUrl={url}
+                  isCover={isCover}
+                  prompt={prompt}
+                  sectionText={sectionText}
+                  aspectRatio={effectiveConfig.imageGen.aspectRatio}
+                  onPreviewImage={handlePreviewImage}
+                  onSetAsCover={handleSetAsCover}
+                />
               );
             })}
           </div>
