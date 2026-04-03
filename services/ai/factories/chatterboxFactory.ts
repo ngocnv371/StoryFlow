@@ -159,7 +159,7 @@ export class ChatterboxAIGenerationFactory implements AIGenerationFactory {
     throw new Error('Chatterbox provider supports narration only. Use Gemini or OpenAI compatible for text.');
   }
 
-  async generateImagePrompts(_config: AppConfig, _story: Story, _numberOfPrompts: number): Promise<string[]> {
+  async generateImagePrompts(_config: AppConfig, _story: Story): Promise<never[]> {
     throw new Error('Chatterbox provider supports narration only. Use Gemini for image prompts.');
   }
 

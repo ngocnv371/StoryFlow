@@ -328,7 +328,7 @@ export class ComfyUIAIGenerationFactory implements AIGenerationFactory {
     throw new Error('ComfyUI provider does not support text generation. Use Gemini provider for text.');
   }
 
-  async generateImagePrompts(_config: AppConfig, _story: Story, _numberOfPrompts: number): Promise<string[]> {
+  async generateImagePrompts(_config: AppConfig, _story: Story): Promise<never[]> {
     throw new Error('ComfyUI provider does not support image prompt generation. Use Gemini provider for text.');
   }
 

@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from '../store';
 import { patchStoryRemote } from '../store/storiesSlice';
 import { generateImagePrompts, generateMultipleImages } from '../services/aiService';
 import { SUPABASE_IMAGE_BUCKET, uploadToSupabase } from '../services/ai/storage';
-import { Story } from '../types';
+import { ImagePromptSection, Story } from '../types';
 import { resolveStoryConfig } from '../services/storyMetadata';
 import toast from 'react-hot-toast';
 import ImageInspector from './ImageInspector';
@@ -31,12 +31,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
   const [previewTitle, setPreviewTitle] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const frameDuration = effectiveConfig.video.frameDuration ?? 3000;
-  const narrationDuration = story.duration ?? 0;
-
-  const requiredImages = narrationDuration > 0
-    ? Math.ceil(narrationDuration / (frameDuration / 1000))
-    : 0;
+  const script = (story.transcript || story.metadata?.transcript || '').trim();
 
   const existingImageUrls: string[] = Array.isArray(story.metadata?.image_urls)
     ? (story.metadata.image_urls as string[])
@@ -44,31 +39,40 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
   const existingPrompts: string[] = Array.isArray(story.metadata?.image_prompts)
     ? (story.metadata.image_prompts as string[])
     : [];
+  const existingSections: ImagePromptSection[] = Array.isArray(story.metadata?.image_prompt_sections)
+    ? (story.metadata.image_prompt_sections as ImagePromptSection[])
+      .filter((section) => typeof section?.prompt === 'string' && section.prompt.trim().length > 0)
+      .map((section) => ({
+        text: typeof section.text === 'string' ? section.text.trim() : '',
+        prompt: section.prompt.trim(),
+      }))
+    : existingPrompts
+      .filter((prompt) => typeof prompt === 'string' && prompt.trim().length > 0)
+      .map((prompt) => ({ text: '', prompt: prompt.trim() }));
 
-  const hasEnoughImages = existingImageUrls.length >= requiredImages && requiredImages > 0;
+  const plannedScenes = existingSections.length;
+  const hasEnoughImages = plannedScenes > 0
+    ? existingImageUrls.length >= plannedScenes
+    : existingImageUrls.length > 0;
+
   const isGenerating = phase !== 'idle';
   const isBusy = isGenerating || isUploading;
   const timelineAspectRatio = effectiveConfig.imageGen.aspectRatio ?? '16:9';
   const timelineAspectRatioCss = timelineAspectRatio.replace(':', ' / ');
 
   const handleGenerate = async () => {
-    if (!narrationDuration) {
-      toast.error('Generate narration first so we can calculate how many images are needed.');
-      return;
-    }
-
-    if (requiredImages <= 0) {
-      toast.error('Could not determine the number of images needed. Check narration duration and frame duration settings.');
+    if (!script) {
+      toast.error('Generate a transcript first so the director can split it into scenes.');
       return;
     }
 
     setPhase('prompts');
     setImagesCompleted(0);
-    setTotalToGenerate(requiredImages);
+    setTotalToGenerate(0);
 
-    let prompts: string[];
+    let sections: ImagePromptSection[];
     try {
-      prompts = await generateImagePrompts(effectiveConfig, story, requiredImages);
+      sections = await generateImagePrompts(effectiveConfig, story);
     } catch (error: any) {
       console.error('Image prompt generation error:', error);
       toast.error(error.message || 'Failed to generate image prompts.');
@@ -76,12 +80,22 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
       return;
     }
 
+    if (sections.length === 0) {
+      toast.error('The director did not return any visual sections. Try refining the script and retry.');
+      setPhase('idle');
+      return;
+    }
+
+    const prompts = sections.map((section) => section.prompt);
+    setTotalToGenerate(prompts.length);
+
     // Save prompts to metadata
     try {
       await dispatch(patchStoryRemote({
         id: story.id,
         metadata: {
           ...story.metadata,
+          image_prompt_sections: sections,
           image_prompts: prompts,
         },
       })).unwrap();
@@ -116,6 +130,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
         id: story.id,
         metadata: {
           ...story.metadata,
+          image_prompt_sections: sections,
           image_prompts: prompts,
           image_urls: generatedUrls,
         },
@@ -123,11 +138,11 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
         ...(story.thumbnail_url ? {} : { thumbnail_url: generatedUrls[0] }),
       })).unwrap();
 
-      const missing = requiredImages - generatedUrls.length;
+      const missing = prompts.length - generatedUrls.length;
       if (missing > 0) {
-        toast.success(`Generated ${generatedUrls.length}/${requiredImages} images. ${missing} failed.`);
+        toast.success(`Generated ${generatedUrls.length}/${prompts.length} directed scene images. ${missing} failed.`);
       } else {
-        toast.success(`Generated ${generatedUrls.length} images.`);
+        toast.success(`Generated ${generatedUrls.length} directed scene images.`);
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save generated images.');
@@ -164,6 +179,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
         metadata: {
           ...story.metadata,
           image_urls: [],
+          image_prompt_sections: [],
           image_prompts: [],
           selected_cover_image_index: undefined,
         },
@@ -219,8 +235,11 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
 
     const baseUrls = replaceOnUpload ? [] : existingImageUrls;
     const basePrompts = replaceOnUpload ? [] : existingPrompts;
+    const baseSections = replaceOnUpload ? [] : existingSections;
+    const uploadedSections: ImagePromptSection[] = uploadedPrompts.map((prompt) => ({ text: '', prompt }));
     const mergedUrls = [...baseUrls, ...uploadedUrls];
     const mergedPrompts = [...basePrompts, ...uploadedPrompts];
+    const mergedSections = [...baseSections, ...uploadedSections];
 
     const currentCoverStillExists = !!story.thumbnail_url && mergedUrls.includes(story.thumbnail_url);
     const nextCoverUrl = currentCoverStillExists
@@ -234,6 +253,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
         metadata: {
           ...story.metadata,
           image_urls: mergedUrls,
+          image_prompt_sections: mergedSections,
           image_prompts: mergedPrompts,
           selected_cover_image_index: mergedUrls.indexOf(nextCoverUrl),
         },
@@ -256,6 +276,8 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
   const selectedIndex: number = typeof story.metadata?.selected_cover_image_index === 'number'
     ? story.metadata.selected_cover_image_index
     : -1;
+  const timelineCount = Math.max(existingSections.length, existingImageUrls.length);
+  const hasStoryboard = timelineCount > 0;
 
   return (
     <div className="space-y-4">
@@ -264,15 +286,17 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
         <div>
           <p className="text-sm font-medium text-slate-100">Scene Images</p>
           <p className="text-xs text-slate-500">
-            {narrationDuration > 0
-              ? `${narrationDuration}s narration @ ${frameDuration}ms/frame = ${requiredImages} images needed`
-              : 'Generate narration first to calculate image count'}
+            {plannedScenes > 0
+              ? `${plannedScenes} directed scenes planned from the script`
+              : script
+                ? 'Generate a scene plan from the script, then render one image per section'
+                : 'Generate a transcript first so the director can plan scenes'}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {existingImageUrls.length > 0 && (
+          {(plannedScenes > 0 || existingImageUrls.length > 0) && (
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${hasEnoughImages ? 'bg-green-900/50 text-green-400' : 'bg-amber-900/50 text-amber-400'}`}>
-              {existingImageUrls.length}/{requiredImages}
+              {existingImageUrls.length}/{plannedScenes > 0 ? plannedScenes : existingImageUrls.length}
             </span>
           )}
         </div>
@@ -281,9 +305,9 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
       {/* Generation button */}
       <button
         onClick={handleGenerate}
-        disabled={isBusy || !narrationDuration}
+        disabled={isBusy || !script}
         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg ${
-          isBusy || !narrationDuration
+          isBusy || !script
             ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
             : 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:shadow-cyan-200 hover:-translate-y-0.5'
         }`}
@@ -304,8 +328,10 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
             </svg>
             <span>
               {existingImageUrls.length > 0
-                ? `Regenerate ${requiredImages} Images`
-                : `Generate ${requiredImages > 0 ? requiredImages : '...'} Images`}
+                ? 'Regenerate Scene Images'
+                : plannedScenes > 0
+                  ? `Generate ${plannedScenes} Scene Images`
+                  : 'Generate Scene Plan and Images'}
             </span>
           </>
         )}
@@ -374,7 +400,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
       )}
 
       {/* Timeline */}
-      {existingImageUrls.length > 0 && (
+      {hasStoryboard && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -389,9 +415,13 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
           </div>
 
           <div className="space-y-4">
-            {existingImageUrls.map((url, idx) => {
-              const isCover = story.thumbnail_url === url || idx === selectedIndex;
-              const prompt = existingPrompts[idx] || 'No prompt stored for this scene.';
+            {Array.from({ length: timelineCount }, (_, idx) => {
+              const url = existingImageUrls[idx];
+              const hasImage = typeof url === 'string' && url.length > 0;
+              const isCover = hasImage && (story.thumbnail_url === url || idx === selectedIndex);
+              const section = existingSections[idx];
+              const prompt = section?.prompt || existingPrompts[idx] || 'No prompt stored for this scene.';
+              const sectionText = section?.text || '';
 
               return (
                 <div key={idx} className="relative pl-8">
@@ -408,18 +438,19 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                     isCover ? 'border-indigo-500/70' : 'border-slate-700'
                   }`}>
                     <div className="grid grid-cols-1 md:grid-cols-[minmax(80px,140px)_1fr] gap-3 items-start">
-                      <button
-                        type="button"
-                        onClick={() => handlePreviewImage(url, idx)}
-                        className="relative rounded-lg overflow-hidden border border-slate-700 group text-left"
-                        title="Preview image"
-                      >
-                        <div className="w-full" style={{ aspectRatio: timelineAspectRatioCss }}>
-                          <img
-                            src={url}
-                            alt={`Scene ${idx + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                      <div className="relative rounded-lg overflow-hidden border border-slate-700 group text-left">
+                        <div className="w-full bg-slate-950" style={{ aspectRatio: timelineAspectRatioCss }}>
+                          {hasImage ? (
+                            <img
+                              src={url}
+                              alt={`Scene ${idx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs px-3 text-center">
+                              Image pending for this section
+                            </div>
+                          )}
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors" />
                         <span className="absolute left-2 top-2 text-[10px] bg-black/70 text-slate-200 px-2 py-1 rounded-full">
@@ -430,7 +461,7 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                             Cover
                           </span>
                         )}
-                      </button>
+                      </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -438,14 +469,16 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                             Prompt {idx + 1}
                           </p>
                           <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handlePreviewImage(url, idx)}
-                              className="text-xs text-slate-300 hover:text-slate-100 font-semibold"
-                            >
-                              Preview
-                            </button>
-                            {!isCover && (
+                            {hasImage && (
+                              <button
+                                type="button"
+                                onClick={() => handlePreviewImage(url, idx)}
+                                className="text-xs text-slate-300 hover:text-slate-100 font-semibold"
+                              >
+                                Preview
+                              </button>
+                            )}
+                            {hasImage && !isCover && (
                               <button
                                 type="button"
                                 onClick={() => handleSetAsCover(url, idx)}
@@ -457,6 +490,12 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
                           </div>
                         </div>
                         <p className="text-[11px] text-slate-500">Aspect ratio: {timelineAspectRatio}</p>
+                        {sectionText && (
+                          <div className="rounded-lg border border-slate-700/70 bg-slate-950/60 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Script Section</p>
+                            <p className="mt-1 text-xs text-slate-300 leading-relaxed">{sectionText}</p>
+                          </div>
+                        )}
                         <p className="text-sm text-slate-200 leading-relaxed">
                           {prompt}
                         </p>
@@ -468,9 +507,9 @@ const VideoImagesGenerator: React.FC<VideoImagesGeneratorProps> = ({ story }) =>
             })}
           </div>
 
-          {!hasEnoughImages && requiredImages > 0 && (
+          {!hasEnoughImages && plannedScenes > 0 && (
             <p className="text-xs text-amber-400">
-              Need {requiredImages - existingImageUrls.length} more image(s) before the video can be compiled.
+              Need {plannedScenes - existingImageUrls.length} more directed scene image(s) before the video can be compiled.
             </p>
           )}
         </div>

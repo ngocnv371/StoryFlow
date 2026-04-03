@@ -40,6 +40,11 @@ export interface StoryGenerationOverrides {
   video?: Partial<VideoGenConfig>;
 }
 
+export interface ImagePromptSection {
+  text: string;
+  prompt: string;
+}
+
 export type StoryTranscriptForm = 'long' | 'short';
 
 export interface StoryMetadata {
@@ -56,6 +61,7 @@ export interface StoryMetadata {
   music_url?: string;
   video_url?: string;
   image_prompts?: string[];
+  image_prompt_sections?: ImagePromptSection[];
   image_urls?: string[];
   selected_cover_image_index?: number;
   generationOverrides?: StoryGenerationOverrides;

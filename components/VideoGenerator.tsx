@@ -5,7 +5,7 @@ import { setVideoGenStatus, patchStoryRemote } from '../store/storiesSlice';
 import { setYouTubeConfig } from '../store/configSlice';
 import { compileStoryVideo } from '../services/encoder-webm';
 import { uploadVideoToSupabase } from '../services/aiService';
-import { Story } from '../types';
+import { ImagePromptSection, Story } from '../types';
 import { downloadVideo } from '@/services/util';
 import { uploadVideoToYouTube } from '../services/youtube';
 import { resolveStoryConfig } from '../services/storyMetadata';
@@ -27,6 +27,19 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPostingToYouTube, setIsPostingToYouTube] = useState(false);
+  const imageUrls: string[] = Array.isArray(story.metadata?.image_urls) ? (story.metadata!.image_urls as string[]) : [];
+  const legacyPrompts: string[] = Array.isArray(story.metadata?.image_prompts) ? (story.metadata!.image_prompts as string[]) : [];
+  const sceneSections: ImagePromptSection[] = Array.isArray(story.metadata?.image_prompt_sections)
+    ? (story.metadata!.image_prompt_sections as ImagePromptSection[])
+      .filter((section) => typeof section?.prompt === 'string' && section.prompt.trim().length > 0)
+      .map((section) => ({
+        text: typeof section.text === 'string' ? section.text.trim() : '',
+        prompt: section.prompt.trim(),
+      }))
+    : legacyPrompts
+      .filter((prompt) => typeof prompt === 'string' && prompt.trim().length > 0)
+      .map((prompt) => ({ text: '', prompt: prompt.trim() }));
+  const plannedSceneCount = sceneSections.length;
 
   const handleDownload = () => {
     if (videoBlob) {
@@ -95,8 +108,13 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
       return;
     }
 
-    if (requiredImages > 0 && imageUrls.length < requiredImages) {
-      toast.error(`Please generate at least ${requiredImages} scene images before compiling the video.`);
+    if (imageUrls.length === 0) {
+      toast.error('Please generate or upload scene images before compiling the video.');
+      return;
+    }
+
+    if (plannedSceneCount > 0 && imageUrls.length < plannedSceneCount) {
+      toast.error(`Please generate all ${plannedSceneCount} directed scene images before compiling the video.`);
       return;
     }
 
@@ -114,7 +132,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
           enableParticles: effectiveConfig.video.enableParticles,
           fps: effectiveConfig.video.fps ?? 30,
           frameDuration: effectiveConfig.video.frameDuration ?? 3000,
-          imageUrls: imageUrls.length >= requiredImages && requiredImages > 0 ? imageUrls : undefined,
+          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         }
       );
       
@@ -159,11 +177,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
   };
 
   const isGenerating = status === 'generating';
-  const narrationDuration = story.duration ?? 0;
-  const frameDuration = effectiveConfig.video.frameDuration ?? 3000;
-  const requiredImages = narrationDuration > 0 ? Math.ceil(narrationDuration / (frameDuration / 1000)) : 0;
-  const imageUrls: string[] = Array.isArray(story.metadata?.image_urls) ? (story.metadata!.image_urls as string[]) : [];
-  const hasEnoughImages = requiredImages === 0 || imageUrls.length >= requiredImages;
+  const hasEnoughImages = plannedSceneCount > 0
+    ? imageUrls.length >= plannedSceneCount
+    : imageUrls.length > 0;
   const hasRequiredAssets = Boolean(story.thumbnail_url) && Boolean(story.audio_url) && hasEnoughImages;
   const hasCompiledVideo = videoBlob && videoPreviewUrl;
   const missingRequirements: string[] = [];
@@ -176,8 +192,10 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
     missingRequirements.push('Missing narration audio');
   }
 
-  if (!hasEnoughImages && requiredImages > 0) {
-    missingRequirements.push(`Missing scene images (${imageUrls.length}/${requiredImages})`);
+  if (imageUrls.length === 0) {
+    missingRequirements.push('Missing scene images');
+  } else if (!hasEnoughImages && plannedSceneCount > 0) {
+    missingRequirements.push(`Missing scene images (${imageUrls.length}/${plannedSceneCount})`);
   }
 
   const blockedReason = missingRequirements.join(' | ');
@@ -239,8 +257,8 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${hasEnoughImages ? 'bg-green-400' : 'bg-amber-400'}`}></span>
               <span>
-                Scene Images: {imageUrls.length}/{requiredImages > 0 ? requiredImages : '?'}
-                {!hasEnoughImages && requiredImages > 0 && ` — need ${requiredImages - imageUrls.length} more`}
+                Scene Images: {imageUrls.length}/{plannedSceneCount > 0 ? plannedSceneCount : imageUrls.length || '?'}
+                {!hasEnoughImages && plannedSceneCount > 0 && ` — need ${plannedSceneCount - imageUrls.length} more`}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -248,7 +266,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ story }) => {
               <span>Video: {story.video_url ? 'Saved to Cloud' : 'Not uploaded'}</span>
             </div>
             <p className="mt-2 italic leading-relaxed text-slate-600">
-              Creates a video cycling through scene images at {effectiveConfig.video.frameDuration ?? 3000}ms per frame at {effectiveConfig.video.fps ?? 30} FPS, matching audio duration.
+              Creates a video cycling through the directed scene images at {effectiveConfig.video.frameDuration ?? 3000}ms per frame at {effectiveConfig.video.fps ?? 30} FPS, matching audio duration.
             </p>
           </div>
           <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45"></div>

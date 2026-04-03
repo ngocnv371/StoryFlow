@@ -40,29 +40,41 @@ Summary: ${story.summary}.
 Atmosphere: ${story.tags.join(', ')}. 
 Style: High-quality digital concept art, epic lighting, professional composition.`;
 
-export const buildImagePromptsRequest = (story: Story, numberOfPrompts: number): string => {
+export const buildImagePromptsRequest = (story: Story): string => {
   const basePrompt = story.cover_prompt || `Artistic, cinematic cover art for a story titled "${story.title}" with summary: ${story.summary}`;
-  
-  return `Generate ${numberOfPrompts} unique cinematic image prompts for a video about: "${story.title}".
+
+  const script = (story.transcript || story.metadata?.transcript || story.summary || '').trim();
+
+  return `Help me write a series of image prompts appropriate for a YouTube Short script.
+
+Cut the provided script into a natural sequence of visual sections. Each section must have a corresponding image prompt that stays tightly aligned to the specific action, subject, mood, and setting of that section.
+
+Return JSON only in this exact format:
+{
+  "sections": [
+    {
+      "text": "",
+      "prompt": ""
+    }
+  ]
+}
+
+Title: ${story.title}
 
 Summary: ${story.summary}
 Tags: ${story.tags.join(', ')}
 Base Visual Style: ${basePrompt}
 
+Here is the script:
+${script}
+
 IMPORTANT INSTRUCTIONS:
-1. Return JSON only in this exact shape:
-{
-  "prompts": [
-    "prompt 1",
-    "prompt 2",
-    ...
-  ]
-}
-2. Generate exactly ${numberOfPrompts} unique, vivid image prompts.
-3. Each prompt should be 1-2 sentences describing a cinematic scene or visual moment that fits the story.
-4. Vary the scenes and perspectives - show different moments, characters, landscapes, or emotions from the story.
-5. Each prompt should be suitable for AI image generation (Gemini Imagen).
-6. Maintain consistent style and tone across all prompts (cinematic, high-quality, professional).
+1. Decide the number of sections based on the actual visual beats of the script. Do not force a fixed count.
+2. Each "text" value must contain the script excerpt for that section, kept concise but faithful to the source.
+3. Each "prompt" value must describe only the image for its matching section, not a generic full-story visual.
+4. Keep each prompt cinematic, visually specific, and suitable for AI image generation.
+5. Preserve consistent character appearance, setting continuity, and overall visual tone across sections.
+6. Avoid adding details that are not supported by the script.
 7. Do not include markdown or code fences.`;
 };
 

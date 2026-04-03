@@ -1,4 +1,4 @@
-import { AppConfig, Story } from '../../types';
+import { AppConfig, ImagePromptSection, Story } from '../../types';
 import { ChatterboxAIGenerationFactory } from './factories/chatterboxFactory';
 import { ComfyUIAIGenerationFactory } from './factories/comfyuiFactory';
 import { GeminiAIGenerationFactory } from './factories/geminiFactory';
@@ -101,9 +101,8 @@ export const generateProjectIdeas = async (
 
 export const generateImagePrompts = async (
   config: AppConfig,
-  story: Story,
-  numberOfPrompts: number
-): Promise<string[]> => {
+  story: Story
+): Promise<ImagePromptSection[]> => {
   const provider: AIProviderFactoryType =
     config.generationProviders.text === 'openai-compatible'
       ? 'openai-compatible'
@@ -111,7 +110,7 @@ export const generateImagePrompts = async (
         ? 'comfyui'
         : 'gemini';
   const factory = createAIGenerationFactory(provider);
-  return await factory.generateImagePrompts(config, story, numberOfPrompts);
+  return await factory.generateImagePrompts(config, story);
 };
 
 export const generateMultipleImages = async (

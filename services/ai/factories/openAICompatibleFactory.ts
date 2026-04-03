@@ -193,7 +193,7 @@ export class OpenAICompatibleAIGenerationFactory implements AIGenerationFactory 
     return ideas;
   }
 
-  async generateImagePrompts(_config: AppConfig, _story: Story, _numberOfPrompts: number): Promise<string[]> {
+  async generateImagePrompts(_config: AppConfig, _story: Story): Promise<never[]> {
     throw new Error(
       "OpenAI compatible provider does not support image prompt generation. Use Gemini for image prompts.",
     );
